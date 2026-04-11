@@ -1,153 +1,124 @@
-const mongoose = require("mongoose");
 const Issue = require("../models/Issue");
+const mongoose = require("mongoose");
 
+// CREATE ISSUE
 const createIssue = async (req, res, next) => {
   try {
-    const { title, description, image, location, priority } = req.body;
+    const { title, description, category, location } = req.body;
 
-    const similarCount = await Issue.countDocuments({
-      title: { $regex: new RegExp(`^${title}$`, "i") },
-      "location.lat": location.lat,
-      "location.lng": location.lng,
-    });
+    if (!location || location.lat == null || location.lng == null) {
+      return res.status(400).json({ message: "Location is required" });
+    }
 
-    const issue = await Issue.create({
+    const issue = new Issue({
       title,
       description,
-      image,
-      location,
-      priority: typeof priority === "number" ? priority : 1 + similarCount,
+      category,
+      location: {
+        type: "Point",
+        coordinates: [location.lng, location.lat],
+      },
     });
 
-    return res.status(201).json({
-      success: true,
-      data: issue,
-    });
-  } catch (error) {
-    return next(error);
+    const created = await issue.save();
+    res.status(201).json(created);
+  } catch (err) {
+    next(err);
   }
 };
 
+// GET ALL ISSUES
 const getIssues = async (req, res, next) => {
   try {
-    const { status, sort } = req.query;
-    const filter = {};
-
-    if (status) {
-      filter.status = status;
-    }
-
-    let sortOption = { createdAt: -1 };
-    if (sort === "priority") sortOption = { priority: 1 };
-    if (sort === "-priority") sortOption = { priority: -1 };
-    if (sort === "date") sortOption = { createdAt: 1 };
-    if (sort === "-date") sortOption = { createdAt: -1 };
-
-    const issues = await Issue.find(filter).sort(sortOption);
-
-    return res.status(200).json({
-      success: true,
-      count: issues.length,
-      data: issues,
-    });
-  } catch (error) {
-    return next(error);
+    const issues = await Issue.find();
+    res.json(issues);
+  } catch (err) {
+    next(err);
   }
 };
 
+// GET ISSUE BY ID
 const getIssueById = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      const error = new Error("Invalid issue ID");
-      error.statusCode = 400;
-      throw error;
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid ID" });
     }
 
-    const issue = await Issue.findById(id);
+    const issue = await Issue.findById(req.params.id);
 
     if (!issue) {
-      const error = new Error("Issue not found");
-      error.statusCode = 404;
-      throw error;
+      return res.status(404).json({ message: "Issue not found" });
     }
 
-    return res.status(200).json({
-      success: true,
-      data: issue,
-    });
-  } catch (error) {
-    return next(error);
+    res.json(issue);
+  } catch (err) {
+    next(err);
   }
 };
 
+// UPDATE ISSUE
 const updateIssue = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { status, priority } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      const error = new Error("Invalid issue ID");
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const updatePayload = {};
-    if (status !== undefined) updatePayload.status = status;
-    if (priority !== undefined) updatePayload.priority = priority;
-
-    if (Object.keys(updatePayload).length === 0) {
-      const error = new Error("Provide status or priority to update");
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const issue = await Issue.findByIdAndUpdate(id, updatePayload, {
-      new: true,
-      runValidators: true,
-    });
+    const issue = await Issue.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
 
     if (!issue) {
-      const error = new Error("Issue not found");
-      error.statusCode = 404;
-      throw error;
+      return res.status(404).json({ message: "Issue not found" });
     }
 
-    return res.status(200).json({
-      success: true,
-      data: issue,
-    });
-  } catch (error) {
-    return next(error);
+    res.json(issue);
+  } catch (err) {
+    next(err);
   }
 };
 
+// DELETE ISSUE
 const deleteIssue = async (req, res, next) => {
   try {
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      const error = new Error("Invalid issue ID");
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const issue = await Issue.findByIdAndDelete(id);
+    const issue = await Issue.findByIdAndDelete(req.params.id);
 
     if (!issue) {
-      const error = new Error("Issue not found");
-      error.statusCode = 404;
-      throw error;
+      return res.status(404).json({ message: "Issue not found" });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: "Issue deleted successfully",
-      data: issue,
-    });
-  } catch (error) {
-    return next(error);
+    res.json({ message: "Issue deleted" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getNearbyIssues = async (req, res, next) => {
+  try {
+    const { lat, lng, radius, category } = req.query;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ message: "lat & lng required" });
+    }
+
+    let query = {
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [parseFloat(lng), parseFloat(lat)],
+          },
+          $maxDistance: parseInt(radius) || 2000, // default 2km
+        },
+      },
+    };
+
+    if (category) {
+      query.category = category;
+    }
+
+    const issues = await Issue.find(query);
+
+    res.json(issues);
+  } catch (err) {
+    next(err);
   }
 };
 
@@ -157,4 +128,5 @@ module.exports = {
   getIssueById,
   updateIssue,
   deleteIssue,
+  getNearbyIssues,
 };

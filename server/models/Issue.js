@@ -10,42 +10,47 @@ const issueSchema = new mongoose.Schema(
     description: {
       type: String,
       required: true,
-      trim: true,
     },
-    image: {
+    category: {
       type: String,
-      trim: true,
-      match: [/^https?:\/\/.+/i, "Image must be a valid URL"],
+      enum: ["garbage", "pothole", "streetlight", "water", "other"],
+      required: true,
     },
+
+
     location: {
-      lat: {
-        type: Number,
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number], 
         required: true,
       },
-      lng: {
-        type: Number,
-        required: true,
-      },
+      address: String,
     },
+
     status: {
       type: String,
-      enum: ["pending", "in_progress", "resolved"],
-      default: "pending",
+      enum: ["reported", "in-progress", "resolved"],
+      default: "reported",
     },
+
     priority: {
       type: Number,
       default: 1,
-      min: 1,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
+
+    image: String,
+    reportedBy: {
+      type: String,
+      default: "anonymous",
     },
   },
-  {
-    timestamps: true,
-    versionKey: false,
-  }
+  { timestamps: true }
 );
+
+issueSchema.index({ location: "2dsphere" });
 
 module.exports = mongoose.model("Issue", issueSchema);

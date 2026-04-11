@@ -1,16 +1,22 @@
 const express = require("express");
+const router = express.Router();
+
 const {
   createIssue,
   getIssues,
   getIssueById,
   updateIssue,
   deleteIssue,
+  getNearbyIssues,
 } = require("../controllers/issueController");
-const { validateIssueCreate } = require("../middleware/errorMiddleware");
 
-const router = express.Router();
+router.post("/", createIssue);
+router.get("/", getIssues);
 
-router.route("/").post(validateIssueCreate, createIssue).get(getIssues);
-router.route("/:id").get(getIssueById).patch(updateIssue).delete(deleteIssue);
+router.get("/nearby", getNearbyIssues);
+
+router.get("/:id", getIssueById);
+router.put("/:id", updateIssue);
+router.delete("/:id", deleteIssue);
 
 module.exports = router;
