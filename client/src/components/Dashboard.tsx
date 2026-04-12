@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { List, Map as MapIcon, Clock, User } from 'lucide-react';
 import L from 'leaflet';
 import { fetchIssues } from '../services/api';
-import { Issue } from '../types';
+import type { Issue } from '../types';
 
 // Fix for default marker icons
 import markerIcon from 'leaflet/dist/images/marker-icon.png';

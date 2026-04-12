@@ -1,57 +1,68 @@
-import { useState } from 'react';
-import { Building2, PlusCircle, LayoutDashboard, BarChart3, ShieldCheck } from 'lucide-react';
-import Dashboard from './components/Dashboard';
-import ReportIssue from './components/ReportIssue';
-import Analytics from './components/Analytics';
+import { Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
+import ReportPage from './pages/ReportPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import IssueDetailPage from './pages/IssueDetailPage';
+import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage';
+
 import './index.css';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'report' | 'analytics'>('dashboard');
-
   return (
-    <>
-      <header>
-        <div className="logo">
-          <Building2 size={32} />
-          <span>CityCare</span>
-        </div>
-        <nav>
-          <a 
-            className={activeTab === 'dashboard' ? 'active' : ''} 
-            onClick={() => setActiveTab('dashboard')}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <LayoutDashboard size={18} /> Dashboard
-            </div>
-          </a>
-          <a 
-            className={activeTab === 'analytics' ? 'active' : ''} 
-            onClick={() => setActiveTab('analytics')}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <BarChart3 size={18} /> Analytics
-            </div>
-          </a>
-        </nav>
-        <button className="btn btn-primary" onClick={() => setActiveTab('report')}>
-          <PlusCircle size={18} /> Report Issue
-        </button>
-      </header>
+    <AuthProvider>
+      <Routes>
+        {/* Auth pages — no layout */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-      <main>
-        {activeTab === 'dashboard' && <Dashboard />}
-        {activeTab === 'report' && <ReportIssue />}
-        {activeTab === 'analytics' && <Analytics />}
-      </main>
-
-      <footer style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', borderTop: '1px solid #e2e8f0', background: 'white' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <ShieldCheck size={20} className="text-primary" />
-          <span style={{ fontWeight: 600 }}>CityCare Integrity System</span>
-        </div>
-        <p>© 2026 Smart City Public Works. Transparency & Accountability.</p>
-      </footer>
-    </>
+        {/* All other pages — with layout */}
+        <Route
+          path="/*"
+          element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/issues/:id" element={<IssueDetailPage />} />
+                <Route
+                  path="/report"
+                  element={
+                    <ProtectedRoute>
+                      <ReportPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute adminOnly>
+                      <AdminPage />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </Layout>
+          }
+        />
+      </Routes>
+    </AuthProvider>
   );
 }
 

@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { Camera, MapPin, Send, Loader2 } from 'lucide-react';
 import L from 'leaflet';
 import { reportIssue } from '../services/api';
-import { Location, IssueType } from '../types';
+import type { Location, IssueType } from '../types';
 
 // Fix for default marker icons
 import markerIcon from 'leaflet/dist/images/marker-icon.png';

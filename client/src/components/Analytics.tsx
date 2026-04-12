@@ -12,7 +12,7 @@ import {
 import { Bar, Pie } from 'react-chartjs-2';
 import { Activity, CheckCircle2, AlertCircle } from 'lucide-react';
 import { fetchStats } from '../services/api';
-import { IssueStats } from '../types';
+import type { IssueStats } from '../types';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
