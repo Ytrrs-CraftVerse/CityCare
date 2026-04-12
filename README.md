@@ -129,7 +129,6 @@ CityCare/
 │   ├── routes/
 │   │   ├── authRoutes.js
 │   │   └── issueRoutes.js
-│   ├── seed.js                 # Create default admin user
 │   └── server.js               # App entry point
 │
 ├── .gitignore
@@ -170,12 +169,6 @@ Create a `.env` file in the `server` directory with the following content:
 PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/smart_city_feedback
 JWT_SECRET=citycare_secret_key_2026
-```
-
-**Seed the Database (One-time setup):**
-To use the admin panel, run the seed script to create the master admin account:
-```bash
-node seed.js
 ```
 
 **Start the Backend Server:**
