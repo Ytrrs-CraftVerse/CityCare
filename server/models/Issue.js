@@ -1,22 +1,19 @@
 const mongoose = require("mongoose");
 
+const commentSchema = new mongoose.Schema(
+  {
+    text: String,
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  },
+  { timestamps: true }
+);
+
 const issueSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
-    category: {
-      type: String,
-      enum: ["garbage", "pothole", "streetlight", "water", "other"],
-      required: true,
-    },
-
+    title: String,
+    description: String,
+    category: String,
+    priority: Number,
 
     location: {
       type: {
@@ -24,11 +21,7 @@ const issueSchema = new mongoose.Schema(
         enum: ["Point"],
         default: "Point",
       },
-      coordinates: {
-        type: [Number], 
-        required: true,
-      },
-      address: String,
+      coordinates: [Number],
     },
 
     status: {
@@ -37,16 +30,10 @@ const issueSchema = new mongoose.Schema(
       default: "reported",
     },
 
-    priority: {
-      type: Number,
-      default: 1,
-    },
+    upvotes: { type: Number, default: 0 },
+    comments: [commentSchema],
 
-    image: String,
-    reportedBy: {
-      type: String,
-      default: "anonymous",
-    },
+    reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
