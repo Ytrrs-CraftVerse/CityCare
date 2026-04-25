@@ -114,6 +114,11 @@ export interface SensorZone {
     noiseLevel: { decibels: number; status: string };
     waterTank: { levelPercent: number; capacityLiters: number; status: string };
   };
+  dataSource?: {
+    airQuality: string;
+    noiseLevel: string;
+    waterQuality: string;
+  };
   lastUpdated: string;
 }
 

@@ -3,7 +3,7 @@ import { fetchSensorData } from '../services/api';
 import type { SensorZone } from '../types';
 import {
   Radio, Wind, Volume2, Droplets, RefreshCw,
-  Loader2, AlertTriangle, CheckCircle2,
+  Loader2, Shield, Database,
 } from 'lucide-react';
 
 const SensorsPage: React.FC = () => {
@@ -34,21 +34,24 @@ const SensorsPage: React.FC = () => {
 
   const getAqiColor = (aqi: number) => {
     if (aqi <= 50) return { color: '#22c55e', label: 'Good' };
-    if (aqi <= 100) return { color: '#eab308', label: 'Moderate' };
-    if (aqi <= 150) return { color: '#f97316', label: 'Unhealthy (SG)' };
-    if (aqi <= 200) return { color: '#ef4444', label: 'Unhealthy' };
-    return { color: '#9333ea', label: 'Hazardous' };
+    if (aqi <= 100) return { color: '#eab308', label: 'Satisfactory' };
+    if (aqi <= 200) return { color: '#f97316', label: 'Moderate' };
+    if (aqi <= 300) return { color: '#ef4444', label: 'Poor' };
+    if (aqi <= 400) return { color: '#dc2626', label: 'Very Poor' };
+    return { color: '#9333ea', label: 'Severe' };
   };
 
   const getNoiseColor = (db: number) => {
     if (db <= 50) return { color: '#22c55e', label: 'Quiet' };
-    if (db <= 70) return { color: '#eab308', label: 'Moderate' };
-    return { color: '#ef4444', label: 'Loud' };
+    if (db <= 65) return { color: '#eab308', label: 'Moderate' };
+    if (db <= 75) return { color: '#f97316', label: 'Loud' };
+    return { color: '#ef4444', label: 'Very Loud' };
   };
 
   const getWaterColor = (level: number) => {
-    if (level >= 60) return { color: '#22c55e', label: 'Good' };
-    if (level >= 30) return { color: '#eab308', label: 'Low' };
+    if (level >= 70) return { color: '#22c55e', label: 'Good' };
+    if (level >= 40) return { color: '#eab308', label: 'Normal' };
+    if (level >= 20) return { color: '#f97316', label: 'Low' };
     return { color: '#ef4444', label: 'Critical' };
   };
 
@@ -56,7 +59,7 @@ const SensorsPage: React.FC = () => {
     return (
       <div className="loading-container">
         <div className="animate-spin" style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%' }} />
-        <span>Loading sensor data...</span>
+        <span>Fetching live data from government APIs...</span>
       </div>
     );
   }
@@ -71,7 +74,7 @@ const SensorsPage: React.FC = () => {
               Live City Sensors
             </h1>
             <p className="page-subtitle">
-              Real-time environmental monitoring across city zones
+              Real-time environmental monitoring powered by Government APIs
               <span style={{ marginLeft: '0.5rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                 Last updated: {lastRefresh.toLocaleTimeString()}
               </span>
@@ -85,6 +88,33 @@ const SensorsPage: React.FC = () => {
             {refreshing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
             Refresh
           </button>
+        </div>
+      </div>
+
+      {/* Government API Attribution Banner */}
+      <div className="card" style={{
+        marginBottom: '1.5rem',
+        background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(20,184,166,0.08))',
+        border: '1px solid rgba(99,102,241,0.2)',
+        padding: '1rem 1.25rem',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          <Shield size={18} style={{ color: 'var(--primary-light)' }} />
+          <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary-light)' }}>Government Data Sources</span>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} />
+            <strong>Air Quality:</strong> WAQI / CPCB India (Central Pollution Control Board)
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6' }} />
+            <strong>Water Quality:</strong> data.gov.in / CPCB RTWQMS
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#eab308' }} />
+            <strong>Noise Level:</strong> CPCB Ambient Noise Standards (zone-type estimate)
+          </div>
         </div>
       </div>
 
@@ -112,11 +142,11 @@ const SensorsPage: React.FC = () => {
               <div className="sensor-row">
                 <div className="sensor-label">
                   <Wind size={16} style={{ color: aqi.color }} />
-                  <span>Air Quality</span>
+                  <span>Air Quality (AQI)</span>
                 </div>
                 <div className="sensor-value">
                   <div className="sensor-gauge">
-                    <div className="sensor-gauge-fill" style={{ width: `${Math.min(zone.sensors.airQuality.aqi / 3, 100)}%`, background: aqi.color }} />
+                    <div className="sensor-gauge-fill" style={{ width: `${Math.min(zone.sensors.airQuality.aqi / 5, 100)}%`, background: aqi.color }} />
                   </div>
                   <span style={{ color: aqi.color, fontWeight: 700, minWidth: '40px', textAlign: 'right' }}>
                     {Math.round(zone.sensors.airQuality.aqi)}
@@ -142,11 +172,11 @@ const SensorsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Water Tank */}
+              {/* Water Level */}
               <div className="sensor-row">
                 <div className="sensor-label">
                   <Droplets size={16} style={{ color: water.color }} />
-                  <span>Water Tank</span>
+                  <span>Water Level</span>
                 </div>
                 <div className="sensor-value">
                   <div className="sensor-gauge">
@@ -171,6 +201,26 @@ const SensorsPage: React.FC = () => {
                   Tank: <strong>{(zone.sensors.waterTank.capacityLiters / 1000).toFixed(0)}kL</strong>
                 </div>
               </div>
+
+              {/* Data Source Attribution */}
+              {zone.dataSource && (
+                <div style={{
+                  marginTop: '0.5rem',
+                  padding: '0.4rem 0.6rem',
+                  background: 'rgba(99,102,241,0.05)',
+                  borderRadius: 'var(--radius)',
+                  fontSize: '0.68rem',
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                }}>
+                  <Database size={10} />
+                  {zone.dataSource.airQuality.includes('CPCB') || zone.dataSource.airQuality.includes('WAQI')
+                    ? '🟢 Live CPCB data'
+                    : '🟡 Estimated'}
+                </div>
+              )}
             </div>
           );
         })}

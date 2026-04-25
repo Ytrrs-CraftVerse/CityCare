@@ -1,11 +1,15 @@
-import { Router, Request, Response } from "express";
-import { generateSensorData } from "../utils/sensors";
+import { Router, Request, Response, NextFunction } from "express";
+import { fetchRealSensorData } from "../utils/sensors";
 
 const router = Router();
 
-router.get("/", (_req: Request, res: Response) => {
-  const data = generateSensorData();
-  res.json(data);
+router.get("/", async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await fetchRealSensorData();
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;
