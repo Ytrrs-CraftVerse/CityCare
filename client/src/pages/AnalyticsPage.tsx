@@ -12,7 +12,7 @@ import {
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { fetchStats } from '../services/api';
 import type { IssueStats } from '../types';
-import { Activity, CheckCircle2, AlertCircle, Clock, TrendingUp } from 'lucide-react';
+import { Activity, CheckCircle2, AlertCircle, Clock, TrendingUp, DollarSign } from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -184,6 +184,63 @@ const AnalyticsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Budget Transparency */}
+      {stats.totalEstimatedCost > 0 && (
+        <div className="card" style={{ marginTop: '1.5rem' }}>
+          <h3 style={{ marginBottom: '1.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <DollarSign size={20} style={{ color: 'var(--teal)' }} />
+            Public Budget Transparency
+          </h3>
+          <div className="grid-3" style={{ marginBottom: '1rem' }}>
+            <div className="card stat-card" style={{ padding: '1rem' }}>
+              <div className="stat-icon teal"><DollarSign size={20} /></div>
+              <div>
+                <div className="stat-value" style={{ fontSize: '1.1rem' }}>₹{stats.totalEstimatedCost.toLocaleString()}</div>
+                <div className="stat-label">Total Estimated</div>
+              </div>
+            </div>
+            <div className="card stat-card" style={{ padding: '1rem' }}>
+              <div className="stat-icon green"><CheckCircle2 size={20} /></div>
+              <div>
+                <div className="stat-value" style={{ fontSize: '1.1rem' }}>₹{stats.totalActualCost.toLocaleString()}</div>
+                <div className="stat-label">Total Spent</div>
+              </div>
+            </div>
+            <div className="card stat-card" style={{ padding: '1rem' }}>
+              <div className="stat-icon red"><AlertCircle size={20} /></div>
+              <div>
+                <div className="stat-value" style={{ fontSize: '1.1rem' }}>{stats.escalated}</div>
+                <div className="stat-label">Escalated Issues</div>
+              </div>
+            </div>
+          </div>
+          {stats.costByCategory.length > 0 && (
+            <div className="table-container" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Issues</th>
+                    <th>Estimated (₹)</th>
+                    <th>Actual (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.costByCategory.map((cat) => (
+                    <tr key={cat._id}>
+                      <td style={{ fontWeight: 600, textTransform: 'capitalize' }}>{cat._id}</td>
+                      <td>{cat.count}</td>
+                      <td>₹{cat.estimated.toLocaleString()}</td>
+                      <td>₹{cat.actual.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

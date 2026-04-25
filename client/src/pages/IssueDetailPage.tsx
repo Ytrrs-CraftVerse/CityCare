@@ -3,18 +3,13 @@ import { useParams, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { fetchIssueById, upvoteIssue, addComment } from '../services/api';
+import { fetchIssueById, upvoteIssue, addComment, verifyIssue, fetchAuditTrail, verifyAuditTrail } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import type { Issue } from '../types';
+import type { Issue, AuditEntry } from '../types';
 import {
-  ArrowLeft,
-  Clock,
-  MapPin,
-  ThumbsUp,
-  MessageSquare,
-  Send,
-  AlertCircle,
-  Loader2,
+  ArrowLeft, Clock, MapPin, ThumbsUp, MessageSquare, Send,
+  AlertCircle, Loader2, ShieldCheck, Link2, CheckCircle2,
+  AlertTriangle, DollarSign, Flame, BadgeCheck,
 } from 'lucide-react';
 
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -31,6 +26,10 @@ const IssueDetailPage: React.FC = () => {
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [upvoting, setUpvoting] = useState(false);
+  const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([]);
+  const [auditValid, setAuditValid] = useState<boolean | null>(null);
+  const [showAudit, setShowAudit] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -40,6 +39,21 @@ const IssueDetailPage: React.FC = () => {
         .finally(() => setLoading(false));
     }
   }, [id]);
+
+  const loadAuditTrail = async () => {
+    if (!id) return;
+    try {
+      const [trailRes, verifyRes] = await Promise.all([
+        fetchAuditTrail(id),
+        verifyAuditTrail(id),
+      ]);
+      setAuditTrail(trailRes.data);
+      setAuditValid(verifyRes.data.valid);
+      setShowAudit(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleUpvote = async () => {
     if (!user || !issue) return;
@@ -69,6 +83,19 @@ const IssueDetailPage: React.FC = () => {
     }
   };
 
+  const handleVerify = async () => {
+    if (!user || !issue) return;
+    setVerifying(true);
+    try {
+      const res = await verifyIssue(issue._id);
+      setIssue(res.data);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Cannot verify');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const getStatusBadge = (s: string) => {
     switch (s) {
       case 'reported': return 'badge-reported';
@@ -85,6 +112,21 @@ const IssueDetailPage: React.FC = () => {
       case 'garbage': return '🗑️';
       case 'water': return '💧';
       default: return '📋';
+    }
+  };
+
+  const getAuditIcon = (action: string) => {
+    switch (action) {
+      case 'created': return '🆕';
+      case 'status-changed': return '🔄';
+      case 'resolved': return '✅';
+      case 'escalated': return '🔴';
+      case 'comment-added': return '💬';
+      case 'upvoted': return '👍';
+      case 'verified': return '✔️';
+      case 'cost-updated': return '💰';
+      case 'deleted': return '🗑️';
+      default: return '📝';
     }
   };
 
@@ -115,10 +157,17 @@ const IssueDetailPage: React.FC = () => {
         <ArrowLeft size={18} /> Back to Dashboard
       </Link>
 
+      {/* Escalation Banner */}
+      {issue.escalationLevel === 'critical' && (
+        <div className="escalation-banner">
+          <AlertTriangle size={20} />
+          <span><strong>CRITICAL DELAY</strong> — This high-priority issue has not been addressed for 48+ hours</span>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }}>
         {/* Left Column */}
         <div>
-          {/* Issue Details */}
           <div className="card" style={{ marginBottom: '1.25rem' }}>
             <div className="issue-detail-header">
               <div>
@@ -127,25 +176,48 @@ const IssueDetailPage: React.FC = () => {
                   <span className="badge badge-category">
                     {getCategoryEmoji(issue.category)} {issue.category}
                   </span>
+                  {issue.sentimentScore >= 7 && (
+                    <span className="badge" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
+                      <Flame size={12} /> Urgent
+                    </span>
+                  )}
+                  {issue.verifiedCount > 0 && (
+                    <span className="badge" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.15)' }}>
+                      <BadgeCheck size={12} /> Verified ×{issue.verifiedCount}
+                    </span>
+                  )}
                 </div>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>{issue.title}</h1>
               </div>
-              <button
-                className={`upvote-btn ${issue.upvotedBy?.includes(user?._id || '') ? 'upvoted' : ''}`}
-                onClick={handleUpvote}
-                disabled={!user || upvoting}
-                title={user ? 'Upvote this issue' : 'Login to upvote'}
-              >
-                <ThumbsUp size={16} />
-                {issue.upvotes}
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  className={`upvote-btn ${issue.upvotedBy?.includes(user?._id || '') ? 'upvoted' : ''}`}
+                  onClick={handleUpvote}
+                  disabled={!user || upvoting}
+                  title={user ? 'Upvote this issue' : 'Login to upvote'}
+                >
+                  <ThumbsUp size={16} />
+                  {issue.upvotes}
+                </button>
+                {user && (user as any).reputationScore >= 50 && !issue.verifiedBy?.includes(user._id) && (
+                  <button
+                    className="btn btn-sm"
+                    style={{ background: 'var(--success-bg)', color: 'var(--success)', border: '1px solid rgba(34,197,94,0.2)' }}
+                    onClick={handleVerify}
+                    disabled={verifying}
+                    title="Verify this issue as a trusted volunteer"
+                  >
+                    <ShieldCheck size={14} /> Verify
+                  </button>
+                )}
+              </div>
             </div>
 
             <p style={{ color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: '1.25rem' }}>
               {issue.description}
             </p>
 
-            <div style={{ display: 'flex', gap: '1.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+            <div style={{ display: 'flex', gap: '1.5rem', color: 'var(--text-muted)', fontSize: '0.85rem', flexWrap: 'wrap' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <Clock size={14} />
                 {new Date(issue.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -154,7 +226,61 @@ const IssueDetailPage: React.FC = () => {
                 <MessageSquare size={14} />
                 {issue.comments?.length || 0} comments
               </span>
+              {(issue.estimatedCost > 0 || issue.actualCost > 0) && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <DollarSign size={14} />
+                  Est: ₹{issue.estimatedCost.toLocaleString()} | Actual: ₹{issue.actualCost.toLocaleString()}
+                </span>
+              )}
             </div>
+          </div>
+
+          {/* Audit Trail */}
+          <div className="card" style={{ marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Link2 size={18} /> Blockchain Audit Trail
+              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {auditValid !== null && (
+                  <span className={`badge ${auditValid ? 'badge-resolved' : 'badge-reported'}`}>
+                    {auditValid ? <><CheckCircle2 size={12} /> Chain Valid</> : <><AlertCircle size={12} /> Chain Broken</>}
+                  </span>
+                )}
+                <button className="btn btn-ghost btn-sm" onClick={loadAuditTrail}>
+                  {showAudit ? 'Refresh' : 'Load Trail'}
+                </button>
+              </div>
+            </div>
+
+            {showAudit && auditTrail.length > 0 ? (
+              <div className="audit-timeline">
+                {auditTrail.map((entry, i) => (
+                  <div key={entry._id} className="audit-entry">
+                    <div className="audit-icon">{getAuditIcon(entry.action)}</div>
+                    <div className="audit-content">
+                      <div className="audit-action">
+                        <strong>{entry.action.replace(/-/g, ' ')}</strong>
+                        <span className="audit-by"> by {entry.performedByName}</span>
+                      </div>
+                      {entry.details && <p className="audit-details">{entry.details}</p>}
+                      <div className="audit-meta">
+                        <span>{new Date(entry.createdAt).toLocaleString()}</span>
+                        <span className="audit-hash" title={entry.hash}>
+                          #{entry.hash.substring(0, 8)}...
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : showAudit ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No audit entries yet.</p>
+            ) : (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                Click "Load Trail" to view the tamper-proof history of this issue.
+              </p>
+            )}
           </div>
 
           {/* Comments */}
@@ -191,10 +317,15 @@ const IssueDetailPage: React.FC = () => {
                 {[...issue.comments].reverse().map((c, i) => (
                   <div key={i} className="comment">
                     <div className="comment-header">
-                      <span className="comment-author">{c.user}</span>
-                      <span className="comment-date">
-                        {new Date(c.createdAt).toLocaleDateString()}
-                      </span>
+                      <span className="comment-author">{c.userName || c.user}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {c.sentimentScore >= 5 && (
+                          <Flame size={12} style={{ color: 'var(--error)' }} title={`Sentiment: ${c.sentimentScore}`} />
+                        )}
+                        <span className="comment-date">
+                          {new Date(c.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
                     <div className="comment-text">{c.text}</div>
                   </div>
@@ -206,7 +337,7 @@ const IssueDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column — Map */}
+        {/* Right Column */}
         <div>
           <div className="card" style={{ marginBottom: '1.25rem' }}>
             <h3 style={{ marginBottom: '0.75rem', fontWeight: 600, fontSize: '0.95rem' }}>
@@ -240,9 +371,39 @@ const IssueDetailPage: React.FC = () => {
                 <span style={{ fontWeight: 600 }}>{'⭐'.repeat(issue.priority)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Severity</span>
+                <span className={`badge ${issue.severity === 'critical' ? 'badge-reported' : issue.severity === 'high' ? 'badge-in-progress' : 'badge-resolved'}`}>
+                  {issue.severity}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Sentiment</span>
+                <span style={{ fontWeight: 600, color: issue.sentimentScore >= 7 ? 'var(--error)' : issue.sentimentScore >= 4 ? 'var(--warning)' : 'var(--success)' }}>
+                  {issue.sentimentScore >= 7 ? '🔥 High' : issue.sentimentScore >= 4 ? '⚠️ Medium' : '✅ Low'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Upvotes</span>
                 <span style={{ fontWeight: 600 }}>{issue.upvotes}</span>
               </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Verified</span>
+                <span style={{ fontWeight: 600, color: issue.verifiedCount > 0 ? 'var(--success)' : 'var(--text-muted)' }}>
+                  {issue.verifiedCount > 0 ? `✓ ${issue.verifiedCount} volunteers` : 'Not yet'}
+                </span>
+              </div>
+              {(issue.estimatedCost > 0 || issue.actualCost > 0) && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Est. Cost</span>
+                    <span style={{ fontWeight: 600 }}>₹{issue.estimatedCost.toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Actual Cost</span>
+                    <span style={{ fontWeight: 600 }}>₹{issue.actualCost.toLocaleString()}</span>
+                  </div>
+                </>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Created</span>
                 <span style={{ fontWeight: 600 }}>{new Date(issue.createdAt).toLocaleDateString()}</span>

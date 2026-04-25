@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { fetchUnreadCount, fetchNotifications, markAllNotificationsRead } from '../services/api';
+import type { AppNotification } from '../types';
 import {
   Building2,
   LayoutDashboard,
@@ -10,9 +12,12 @@ import {
   LogOut,
   LogIn,
   UserPlus,
-  ShieldCheck,
   Home,
   Shield,
+  Bell,
+  Vote,
+  Radio,
+  X,
 } from 'lucide-react';
 
 interface Props {
@@ -22,8 +27,49 @@ interface Props {
 const Layout: React.FC<Props> = ({ children }) => {
   const { user, logout, isAdmin } = useAuth();
   const location = useLocation();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifs, setShowNotifs] = useState(false);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   const isActive = (path: string) => location.pathname === path;
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount()
+        .then((res) => setUnreadCount(res.data.count))
+        .catch(() => {});
+
+      const interval = setInterval(() => {
+        fetchUnreadCount()
+          .then((res) => setUnreadCount(res.data.count))
+          .catch(() => {});
+      }, 30000);
+
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const handleBellClick = async () => {
+    if (showNotifs) {
+      setShowNotifs(false);
+      return;
+    }
+    try {
+      const res = await fetchNotifications();
+      setNotifications(res.data);
+      setShowNotifs(true);
+    } catch {
+      setShowNotifs(false);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      setUnreadCount(0);
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch {}
+  };
 
   return (
     <>
@@ -43,6 +89,12 @@ const Layout: React.FC<Props> = ({ children }) => {
           <Link to="/analytics" className={`nav-link ${isActive('/analytics') ? 'active' : ''}`}>
             <BarChart3 size={18} /> Analytics
           </Link>
+          <Link to="/projects" className={`nav-link ${isActive('/projects') ? 'active' : ''}`}>
+            <Vote size={18} /> Projects
+          </Link>
+          <Link to="/sensors" className={`nav-link ${isActive('/sensors') ? 'active' : ''}`}>
+            <Radio size={18} /> Sensors
+          </Link>
           {user && (
             <Link to="/report" className={`nav-link ${isActive('/report') ? 'active' : ''}`}>
               <PlusCircle size={18} /> Report
@@ -56,6 +108,57 @@ const Layout: React.FC<Props> = ({ children }) => {
         </nav>
 
         <div className="nav-actions">
+          {user && (
+            <div style={{ position: 'relative' }}>
+              <button
+                className="btn btn-ghost btn-icon"
+                onClick={handleBellClick}
+                title="Notifications"
+                style={{ position: 'relative' }}
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="notif-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                )}
+              </button>
+
+              {showNotifs && (
+                <div className="notif-dropdown">
+                  <div className="notif-header">
+                    <h4>Notifications</h4>
+                    <div style={{ display: 'flex', gap: '0.3rem' }}>
+                      {unreadCount > 0 && (
+                        <button className="btn btn-ghost btn-sm" onClick={handleMarkAllRead}>
+                          Mark all read
+                        </button>
+                      )}
+                      <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setShowNotifs(false)}>
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="notif-list">
+                    {notifications.length === 0 ? (
+                      <div className="notif-empty">No notifications yet</div>
+                    ) : (
+                      notifications.slice(0, 10).map((n) => (
+                        <Link
+                          key={n._id}
+                          to={n.issueId ? `/issues/${n.issueId}` : '#'}
+                          className={`notif-item ${n.read ? '' : 'unread'}`}
+                          onClick={() => setShowNotifs(false)}
+                        >
+                          <p>{n.message}</p>
+                          <span>{new Date(n.createdAt).toLocaleDateString()}</span>
+                        </Link>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {user ? (
             <>
               <Link to="/profile" className="user-badge" style={{ textDecoration: 'none' }}>
@@ -84,7 +187,7 @@ const Layout: React.FC<Props> = ({ children }) => {
 
       <footer className="app-footer">
         <div className="footer-brand">
-          <ShieldCheck size={18} className="text-primary" />
+          <Shield size={18} className="text-primary" />
           <span>CityCare Integrity System</span>
         </div>
         <p>© 2026 Smart City Public Works. Transparency & Accountability.</p>

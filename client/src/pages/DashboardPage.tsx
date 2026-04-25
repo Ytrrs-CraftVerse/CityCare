@@ -13,6 +13,9 @@ import {
   Filter,
   ThumbsUp,
   MessageSquare,
+  AlertTriangle,
+  Flame,
+  BadgeCheck,
 } from 'lucide-react';
 
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -168,10 +171,27 @@ const DashboardPage: React.FC = () => {
             <Link key={issue._id} to={`/issues/${issue._id}`} style={{ textDecoration: 'none' }}>
               <div className="card card-interactive issue-card">
                 <div className="issue-card-header">
-                  <span className={`badge ${getStatusBadge(issue.status)}`}>{issue.status}</span>
-                  <span className="badge badge-category">
-                    {getCategoryEmoji(issue.category)} {issue.category}
-                  </span>
+                  <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                    <span className={`badge ${getStatusBadge(issue.status)}`}>{issue.status}</span>
+                    <span className="badge badge-category">
+                      {getCategoryEmoji(issue.category)} {issue.category}
+                    </span>
+                    {issue.escalationLevel === 'critical' && (
+                      <span className="badge" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
+                        <AlertTriangle size={10} /> CRITICAL
+                      </span>
+                    )}
+                    {issue.sentimentScore >= 7 && (
+                      <span className="badge" style={{ background: 'rgba(239,68,68,0.1)', color: '#f97316', border: '1px solid rgba(249,115,22,0.15)' }}>
+                        <Flame size={10} /> Urgent
+                      </span>
+                    )}
+                    {issue.verifiedCount > 0 && (
+                      <span className="badge" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.15)' }}>
+                        <BadgeCheck size={10} /> ×{issue.verifiedCount}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <h3>{issue.title}</h3>
                 <p>{issue.description}</p>

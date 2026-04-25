@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { reportIssue } from '../services/api';
-import { MapPin, Send, Loader2, CheckCircle2 } from 'lucide-react';
+import { reportIssue, fetchDuplicates, suggestCategory } from '../services/api';
+import type { Issue } from '../types';
+import { MapPin, Send, Loader2, CheckCircle2, AlertTriangle, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -29,11 +31,55 @@ const ReportPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [duplicates, setDuplicates] = useState<Issue[]>([]);
+  const [aiSuggestion, setAiSuggestion] = useState<{ category: string | null; severity: string } | null>(null);
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+
+  const checkDuplicates = useCallback(async (lat: number, lng: number, cat: string) => {
+    try {
+      const res = await fetchDuplicates(lat, lng, cat);
+      if (res.data.length > 0) {
+        setDuplicates(res.data);
+        setShowDuplicateWarning(true);
+      } else {
+        setDuplicates([]);
+        setShowDuplicateWarning(false);
+      }
+    } catch {
+      // Silently fail
+    }
+  }, []);
+
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setLocation({ lat, lng });
+    checkDuplicates(lat, lng, category);
+  };
+
+  const handleCategoryChange = (cat: string) => {
+    setCategory(cat);
+    if (location) {
+      checkDuplicates(location.lat, location.lng, cat);
+    }
+  };
+
+  const handleDescriptionBlur = async () => {
+    if (description.length > 10) {
+      try {
+        const res = await suggestCategory(description + ' ' + title);
+        if (res.data.suggestedCategory) {
+          setAiSuggestion({
+            category: res.data.suggestedCategory,
+            severity: res.data.estimatedSeverity,
+          });
+        }
+      } catch {}
+    }
+  };
 
   const LocationMarker = () => {
     useMapEvents({
       click(e: L.LeafletMouseEvent) {
-        setLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
+        handleLocationSelect(e.latlng.lat, e.latlng.lng);
       },
     });
     return location ? <Marker position={[location.lat, location.lng]} /> : null;
@@ -87,6 +133,71 @@ const ReportPage: React.FC = () => {
           </div>
         )}
 
+        {/* Duplicate Warning */}
+        {showDuplicateWarning && duplicates.length > 0 && (
+          <div className="card" style={{ marginBottom: '1.25rem', border: '1px solid rgba(234,179,8,0.3)', background: 'rgba(234,179,8,0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+              <AlertTriangle size={20} style={{ color: 'var(--warning)' }} />
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--warning)' }}>
+                Possible Duplicate Detected!
+              </h3>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+              Similar issues were found within 20 meters of your selected location:
+            </p>
+            {duplicates.map((dup) => (
+              <Link
+                key={dup._id}
+                to={`/issues/${dup._id}`}
+                style={{ textDecoration: 'none' }}
+              >
+                <div className="card card-interactive" style={{ padding: '0.75rem', marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong style={{ fontSize: '0.85rem' }}>{dup.title}</strong>
+                      <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                        Reported by {dup.reportedByName} — {new Date(dup.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className={`badge ${dup.status === 'resolved' ? 'badge-resolved' : 'badge-reported'}`}>
+                      {dup.status}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+              Is this the same issue? Consider upvoting the existing report instead.
+            </p>
+          </div>
+        )}
+
+        {/* AI Suggestion */}
+        {aiSuggestion && aiSuggestion.category && aiSuggestion.category !== category && (
+          <div className="card" style={{ marginBottom: '1.25rem', border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <Sparkles size={18} style={{ color: 'var(--primary-light)' }} />
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary-light)' }}>
+                AI Suggestion
+              </span>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              Based on your description, this might be a <strong>{aiSuggestion.category}</strong> issue
+              with <strong>{aiSuggestion.severity}</strong> severity.
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ marginLeft: '0.5rem' }}
+                onClick={() => {
+                  setCategory(aiSuggestion.category!);
+                  setAiSuggestion(null);
+                }}
+              >
+                Apply suggestion
+              </button>
+            </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="card" style={{ marginBottom: '1.25rem' }}>
             <h3 style={{ marginBottom: '1rem', fontSize: '1rem', fontWeight: 600 }}>Issue Details</h3>
@@ -104,7 +215,7 @@ const ReportPage: React.FC = () => {
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Category</label>
-                <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
+                <select className="form-select" value={category} onChange={(e) => handleCategoryChange(e.target.value)}>
                   {categories.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
@@ -119,6 +230,7 @@ const ReportPage: React.FC = () => {
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                onBlur={handleDescriptionBlur}
                 required
               />
             </div>

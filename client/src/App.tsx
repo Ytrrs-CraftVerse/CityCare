@@ -12,6 +12,8 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import IssueDetailPage from './pages/IssueDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import ProjectsPage from './pages/ProjectsPage';
+import SensorsPage from './pages/SensorsPage';
 
 import './index.css';
 
@@ -32,6 +34,8 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/sensors" element={<SensorsPage />} />
                 <Route path="/issues/:id" element={<IssueDetailPage />} />
                 <Route
                   path="/report"

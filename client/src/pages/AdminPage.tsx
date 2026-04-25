@@ -2,14 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { fetchIssues, fetchStats, updateIssue, deleteIssue } from '../services/api';
 import type { Issue, IssueStats } from '../types';
 import {
-  Shield,
-  Activity,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Trash2,
-  Eye,
-  Loader2,
+  Shield, Activity, CheckCircle2, Clock, AlertCircle,
+  Trash2, Eye, Loader2, DollarSign, AlertTriangle,
+  Flame, BadgeCheck,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -18,6 +13,8 @@ const AdminPage: React.FC = () => {
   const [stats, setStats] = useState<IssueStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [editingCost, setEditingCost] = useState<string | null>(null);
+  const [costValues, setCostValues] = useState<{ estimated: string; actual: string }>({ estimated: '', actual: '' });
 
   useEffect(() => {
     loadData();
@@ -50,7 +47,7 @@ const AdminPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this issue?')) return;
+    if (!confirm('Delete this issue? The audit trail will be preserved.')) return;
     setActionLoading(id);
     try {
       await deleteIssue(id);
@@ -62,12 +59,33 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (s: string) => {
-    switch (s) {
-      case 'reported': return 'badge-reported';
-      case 'in-progress': return 'badge-in-progress';
-      case 'resolved': return 'badge-resolved';
-      default: return '';
+  const handleCostEdit = (issue: Issue) => {
+    setEditingCost(issue._id);
+    setCostValues({
+      estimated: issue.estimatedCost.toString(),
+      actual: issue.actualCost.toString(),
+    });
+  };
+
+  const handleCostSave = async (id: string) => {
+    setActionLoading(id);
+    try {
+      await updateIssue(id, {
+        estimatedCost: Number(costValues.estimated),
+        actualCost: Number(costValues.actual),
+      } as any);
+      setIssues((prev) =>
+        prev.map((i) =>
+          i._id === id
+            ? { ...i, estimatedCost: Number(costValues.estimated), actualCost: Number(costValues.actual) }
+            : i
+        )
+      );
+      setEditingCost(null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -87,7 +105,7 @@ const AdminPage: React.FC = () => {
           <Shield size={28} style={{ verticalAlign: 'middle', marginRight: '0.5rem', color: 'var(--error)' }} />
           Admin Panel
         </h1>
-        <p className="page-subtitle">Manage all reported issues and update their status</p>
+        <p className="page-subtitle">Manage issues, update status, and track budgets</p>
       </div>
 
       {/* Stats */}
@@ -124,6 +142,25 @@ const AdminPage: React.FC = () => {
         </div>
       )}
 
+      {/* Budget Overview */}
+      {stats && (
+        <div className="card" style={{ marginBottom: '1.5rem', display: 'flex', gap: '2rem', padding: '1.15rem 1.5rem', alignItems: 'center' }}>
+          <DollarSign size={24} style={{ color: 'var(--teal)' }} />
+          <div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Total Estimated</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>₹{stats.totalEstimatedCost.toLocaleString()}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Total Actual</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--success)' }}>₹{stats.totalActualCost.toLocaleString()}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Escalated</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--error)' }}>{stats.escalated}</div>
+          </div>
+        </div>
+      )}
+
       {/* Issues Table */}
       <div className="card" style={{ padding: 0 }}>
         <div className="table-container">
@@ -133,7 +170,8 @@ const AdminPage: React.FC = () => {
                 <th>Title</th>
                 <th>Category</th>
                 <th>Status</th>
-                <th>Upvotes</th>
+                <th>Priority</th>
+                <th>Cost (₹)</th>
                 <th>Date</th>
                 <th>Actions</th>
               </tr>
@@ -141,8 +179,16 @@ const AdminPage: React.FC = () => {
             <tbody>
               {issues.map((issue) => (
                 <tr key={issue._id}>
-                  <td style={{ fontWeight: 500, color: 'var(--text-primary)', maxWidth: '250px' }}>
-                    <div className="truncate">{issue.title}</div>
+                  <td style={{ fontWeight: 500, color: 'var(--text-primary)', maxWidth: '200px' }}>
+                    <div className="truncate" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      {issue.escalationLevel === 'critical' && (
+                        <AlertTriangle size={14} style={{ color: 'var(--error)', flexShrink: 0 }} />
+                      )}
+                      {issue.sentimentScore >= 7 && (
+                        <Flame size={14} style={{ color: '#f97316', flexShrink: 0 }} />
+                      )}
+                      {issue.title}
+                    </div>
                   </td>
                   <td>
                     <span className="badge badge-category">{issue.category}</span>
@@ -160,7 +206,41 @@ const AdminPage: React.FC = () => {
                       <option value="resolved">Resolved</option>
                     </select>
                   </td>
-                  <td style={{ textAlign: 'center' }}>{issue.upvotes}</td>
+                  <td style={{ textAlign: 'center' }}>{'⭐'.repeat(issue.priority)}</td>
+                  <td>
+                    {editingCost === issue._id ? (
+                      <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
+                        <input
+                          className="form-input"
+                          style={{ width: '70px', padding: '0.25rem 0.4rem', fontSize: '0.75rem' }}
+                          value={costValues.estimated}
+                          onChange={(e) => setCostValues((v) => ({ ...v, estimated: e.target.value }))}
+                          placeholder="Est"
+                          type="number"
+                        />
+                        <input
+                          className="form-input"
+                          style={{ width: '70px', padding: '0.25rem 0.4rem', fontSize: '0.75rem' }}
+                          value={costValues.actual}
+                          onChange={(e) => setCostValues((v) => ({ ...v, actual: e.target.value }))}
+                          placeholder="Act"
+                          type="number"
+                        />
+                        <button className="btn btn-primary btn-sm btn-icon" onClick={() => handleCostSave(issue._id)}>
+                          <CheckCircle2 size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => handleCostEdit(issue)}
+                        style={{ fontSize: '0.75rem' }}
+                      >
+                        <DollarSign size={12} />
+                        {issue.estimatedCost > 0 ? `₹${issue.estimatedCost.toLocaleString()}` : 'Set cost'}
+                      </button>
+                    )}
+                  </td>
                   <td>{new Date(issue.createdAt).toLocaleDateString()}</td>
                   <td>
                     <div style={{ display: 'flex', gap: '0.4rem' }}>
