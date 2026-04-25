@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import MapLibre from '../components/MapLibre';
 import { fetchIssues } from '../services/api';
 import type { Issue } from '../types';
 import {
@@ -18,12 +16,6 @@ import {
   BadgeCheck,
   Building2,
 } from 'lucide-react';
-
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-const DefaultIcon = L.icon({ iconUrl: markerIcon, shadowUrl: markerShadow });
-L.Marker.prototype.options.icon = DefaultIcon;
 
 const categories = ['all', 'pothole', 'streetlight', 'garbage', 'water', 'other'];
 const statuses = ['all', 'reported', 'in-progress', 'resolved'];
@@ -134,31 +126,19 @@ const DashboardPage: React.FC = () => {
         </div>
       ) : view === 'map' ? (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <MapContainer center={[19.076, 72.877]} zoom={12} style={{ height: '500px', borderRadius: 'var(--radius-lg)' }}>
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-            />
-            {issues.map((issue) => (
-              <Marker
-                key={issue._id}
-                position={[issue.location.coordinates[1], issue.location.coordinates[0]]}
-              >
-                <Popup>
-                  <div style={{ minWidth: '180px' }}>
-                    <strong>{issue.title}</strong>
-                    <p style={{ fontSize: '0.8rem', margin: '0.4rem 0', color: '#666' }}>{issue.description.slice(0, 80)}...</p>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: '9999px', background: issue.status === 'resolved' ? '#dcfce7' : issue.status === 'in-progress' ? '#fef3c7' : '#dbeafe', color: issue.status === 'resolved' ? '#166534' : issue.status === 'in-progress' ? '#92400e' : '#1e40af' }}>
-                        {issue.status}
-                      </span>
-                      <a href={`/issues/${issue._id}`} style={{ fontSize: '0.75rem', color: '#3b82f6' }}>View →</a>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+          <MapLibre 
+            center={[19.076, 72.877]} 
+            zoom={12} 
+            markers={issues.map(issue => ({
+              id: issue._id,
+              lat: issue.location.coordinates[1],
+              lng: issue.location.coordinates[0],
+              title: issue.title,
+              description: issue.description,
+              status: issue.status,
+              category: issue.category
+            }))}
+          />
         </div>
       ) : issues.length === 0 ? (
         <div className="empty-state">

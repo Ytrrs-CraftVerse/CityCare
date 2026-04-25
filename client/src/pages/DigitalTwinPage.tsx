@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import MapLibre from '../components/MapLibre';
 import { fetchDigitalTwinData } from '../services/api';
 import type { DigitalTwinCell } from '../types';
 import { Link } from 'react-router-dom';
@@ -71,54 +70,12 @@ const DigitalTwinPage: React.FC = () => {
       </div>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <MapContainer center={[19.076, 72.877]} zoom={12} style={{ height: '550px', borderRadius: 'var(--radius-lg)' }}>
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; OSM'
-          />
-          {cells.map((cell, i) => (
-            <CircleMarker
-              key={i}
-              center={[cell.lat, cell.lng]}
-              radius={getRadius(cell.count)}
-              fillColor={getHeatColor(cell.count)}
-              fillOpacity={0.6}
-              stroke={true}
-              color={getHeatColor(cell.count)}
-              weight={1}
-              opacity={0.8}
-            >
-              <Popup>
-                <div style={{ minWidth: '180px', fontFamily: 'Inter, sans-serif' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem' }}>
-                    {cell.count} issue{cell.count > 1 ? 's' : ''} here
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: '#666', marginBottom: '0.5rem' }}>
-                    {Object.entries(cell.categories).map(([cat, n]) => (
-                      <span key={cat} style={{ display: 'inline-block', marginRight: '0.5rem', textTransform: 'capitalize' }}>
-                        {cat}: {n}
-                      </span>
-                    ))}
-                  </div>
-                  {cell.issues.slice(0, 3).map((issue) => (
-                    <a
-                      key={issue._id}
-                      href={`/issues/${issue._id}`}
-                      style={{ display: 'block', fontSize: '0.78rem', color: '#3b82f6', marginBottom: '0.2rem' }}
-                    >
-                      → {issue.title}
-                    </a>
-                  ))}
-                  {cell.issues.length > 3 && (
-                    <span style={{ fontSize: '0.72rem', color: '#999' }}>
-                      +{cell.issues.length - 3} more
-                    </span>
-                  )}
-                </div>
-              </Popup>
-            </CircleMarker>
-          ))}
-        </MapContainer>
+        <MapLibre 
+          center={[19.076, 72.877]} 
+          zoom={12} 
+          height="550px"
+          heatCells={cells}
+        />
       </div>
     </div>
   );

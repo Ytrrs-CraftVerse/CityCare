@@ -1,18 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import MapLibre from '../components/MapLibre';
 import { reportIssue, fetchDuplicates, suggestCategory } from '../services/api';
 import type { Issue } from '../types';
 import { MapPin, Send, Loader2, CheckCircle2, AlertTriangle, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-const DefaultIcon = L.icon({ iconUrl: markerIcon, shadowUrl: markerShadow });
-L.Marker.prototype.options.icon = DefaultIcon;
 
 const categories = [
   { value: 'pothole', label: '🕳️ Pothole' },
@@ -76,14 +68,7 @@ const ReportPage: React.FC = () => {
     }
   };
 
-  const LocationMarker = () => {
-    useMapEvents({
-      click(e: L.LeafletMouseEvent) {
-        handleLocationSelect(e.latlng.lat, e.latlng.lng);
-      },
-    });
-    return location ? <Marker position={[location.lat, location.lng]} /> : null;
-  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -246,13 +231,13 @@ const ReportPage: React.FC = () => {
               </p>
             )}
             <div style={{ borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)' }}>
-              <MapContainer center={[19.076, 72.877]} zoom={13} style={{ height: '350px' }}>
-                <TileLayer
-                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                  attribution='&copy; OSM'
-                />
-                <LocationMarker />
-              </MapContainer>
+              <MapLibre 
+                center={[19.076, 72.877]} 
+                zoom={13} 
+                height="350px"
+                onClick={handleLocationSelect}
+                singleMarker={location || undefined}
+              />
             </div>
           </div>
 

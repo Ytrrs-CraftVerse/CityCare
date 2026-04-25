@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import MapLibre from '../components/MapLibre';
 import { fetchIssueById, upvoteIssue, addComment, verifyIssue, fetchAuditTrail, verifyAuditTrail, generateQRCode } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { Issue, AuditEntry, GeoFencedQR } from '../types';
@@ -11,12 +9,6 @@ import {
   AlertCircle, Loader2, ShieldCheck, Link2, CheckCircle2,
   AlertTriangle, DollarSign, Flame, BadgeCheck, Building2, HardHat, QrCode,
 } from 'lucide-react';
-
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-const DefaultIcon = L.icon({ iconUrl: markerIcon, shadowUrl: markerShadow });
-L.Marker.prototype.options.icon = DefaultIcon;
 
 const IssueDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -347,18 +339,20 @@ const IssueDetailPage: React.FC = () => {
               Location
             </h3>
             <div style={{ borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)' }}>
-              <MapContainer
-                center={[issue.location.coordinates[1], issue.location.coordinates[0]]}
-                zoom={15}
-                style={{ height: '250px' }}
-                scrollWheelZoom={false}
-              >
-                <TileLayer
-                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                  attribution='&copy; OSM'
-                />
-                <Marker position={[issue.location.coordinates[1], issue.location.coordinates[0]]} />
-              </MapContainer>
+              <MapLibre 
+                center={[issue.location.coordinates[1], issue.location.coordinates[0]]} 
+                zoom={15} 
+                height="250px"
+                markers={[{
+                  id: issue._id,
+                  lat: issue.location.coordinates[1],
+                  lng: issue.location.coordinates[0],
+                  title: issue.title,
+                  description: issue.description,
+                  status: issue.status,
+                  category: issue.category
+                }]}
+              />
             </div>
             <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               {issue.location.coordinates[1].toFixed(5)}, {issue.location.coordinates[0].toFixed(5)}
