@@ -84,7 +84,7 @@ const Layout: React.FC<Props> = ({ children }) => {
             <Home size={18} /> Home
           </Link>
           <Link to="/dashboard" className={`nav-link ${isActive('/dashboard') ? 'active' : ''}`}>
-            <LayoutDashboard size={18} /> Dashboard
+            <LayoutDashboard size={18} /> Community
           </Link>
           <Link to="/analytics" className={`nav-link ${isActive('/analytics') ? 'active' : ''}`}>
             <BarChart3 size={18} /> Analytics
@@ -93,7 +93,7 @@ const Layout: React.FC<Props> = ({ children }) => {
             <Vote size={18} /> Projects
           </Link>
           <Link to="/sensors" className={`nav-link ${isActive('/sensors') ? 'active' : ''}`}>
-            <Radio size={18} /> Sensors
+            <Radio size={18} /> Live Health
           </Link>
           {user && (
             <Link to="/report" className={`nav-link ${isActive('/report') ? 'active' : ''}`}>
@@ -188,9 +188,9 @@ const Layout: React.FC<Props> = ({ children }) => {
       <footer className="app-footer">
         <div className="footer-brand">
           <Shield size={18} className="text-primary" />
-          <span>CityCare Integrity System</span>
+          <span>CityCare Community Platform</span>
         </div>
-        <p>© 2026 Smart City Public Works. Transparency & Accountability.</p>
+        <p>© 2026 Made for better neighborhoods. Open source & transparent.</p>
       </footer>
     </>
   );

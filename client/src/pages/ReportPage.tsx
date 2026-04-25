@@ -110,8 +110,8 @@ const ReportPage: React.FC = () => {
       <div className="page animate-fade-in" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <div className="card" style={{ textAlign: 'center', maxWidth: '400px', padding: '3rem' }}>
           <CheckCircle2 size={56} style={{ color: 'var(--success)', marginBottom: '1rem' }} />
-          <h2 style={{ marginBottom: '0.5rem' }}>Report Submitted!</h2>
-          <p style={{ color: 'var(--text-muted)' }}>Redirecting to dashboard...</p>
+          <h2 style={{ marginBottom: '0.5rem' }}>Thanks for letting us know!</h2>
+          <p style={{ color: 'var(--text-muted)' }}>We've received your report. Taking you to the community board...</p>
         </div>
       </div>
     );
@@ -122,9 +122,9 @@ const ReportPage: React.FC = () => {
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <div className="page-header">
           <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <MapPin className="text-primary" /> Report Civic Issue
+            <MapPin className="text-primary" /> Tell us what needs fixing
           </h1>
-          <p className="page-subtitle">Help improve your city by reporting problems</p>
+          <p className="page-subtitle">Your reports help make the neighborhood safer and cleaner.</p>
         </div>
 
         {error && (
@@ -200,21 +200,21 @@ const ReportPage: React.FC = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="card" style={{ marginBottom: '1.25rem' }}>
-            <h3 style={{ marginBottom: '1rem', fontSize: '1rem', fontWeight: 600 }}>Issue Details</h3>
+            <h3 style={{ marginBottom: '1rem', fontSize: '1rem', fontWeight: 600 }}>What's the issue?</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Title</label>
+                <label className="form-label">Brief Title</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="e.g., Large pothole on MG Road"
+                  placeholder="e.g., Deep pothole near the station"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
                 />
               </div>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Category</label>
+                <label className="form-label">Type of Problem</label>
                 <select className="form-select" value={category} onChange={(e) => handleCategoryChange(e.target.value)}>
                   {categories.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
@@ -223,10 +223,10 @@ const ReportPage: React.FC = () => {
               </div>
             </div>
             <div className="form-group" style={{ marginTop: '1rem', marginBottom: 0 }}>
-              <label className="form-label">Description</label>
+              <label className="form-label">More Details</label>
               <textarea
                 className="form-textarea"
-                placeholder="Describe the issue in detail..."
+                placeholder="Where exactly is it? Is it causing traffic or safety issues?"
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -238,7 +238,7 @@ const ReportPage: React.FC = () => {
 
           <div className="card" style={{ marginBottom: '1.25rem' }}>
             <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 600 }}>
-              📍 Location <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '0.85rem' }}>(Click on the map)</span>
+              📍 Where is it? <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '0.85rem' }}>(Tap on the map)</span>
             </h3>
             {location && (
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>

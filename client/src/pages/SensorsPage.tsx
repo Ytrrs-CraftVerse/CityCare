@@ -59,7 +59,7 @@ const SensorsPage: React.FC = () => {
     return (
       <div className="loading-container">
         <div className="animate-spin" style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%' }} />
-        <span>Fetching live data from government APIs...</span>
+        <span>Checking local air and water quality...</span>
       </div>
     );
   }
@@ -71,10 +71,10 @@ const SensorsPage: React.FC = () => {
           <div>
             <h1 className="page-title">
               <Radio size={28} style={{ verticalAlign: 'middle', marginRight: '0.5rem', color: 'var(--teal)' }} />
-              Live City Sensors
+              Live City Health
             </h1>
             <p className="page-subtitle">
-              Real-time environmental monitoring powered by Government APIs
+              See what the air, water, and noise levels look like in your area right now.
               <span style={{ marginLeft: '0.5rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                 Last updated: {lastRefresh.toLocaleTimeString()}
               </span>
@@ -100,7 +100,7 @@ const SensorsPage: React.FC = () => {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
           <Shield size={18} style={{ color: 'var(--primary-light)' }} />
-          <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary-light)' }}>Government Data Sources</span>
+          <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--primary-light)' }}>Where does this data come from?</span>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>

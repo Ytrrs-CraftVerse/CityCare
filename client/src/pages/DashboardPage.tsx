@@ -85,8 +85,8 @@ const DashboardPage: React.FC = () => {
       <div className="page-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 className="page-title">Public Dashboard</h1>
-            <p className="page-subtitle">{issues.length} issues found</p>
+            <h1 className="page-title">Community Board</h1>
+            <p className="page-subtitle">{issues.length} things happening around you</p>
           </div>
           <div className="tab-group">
             <button className={`tab-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>

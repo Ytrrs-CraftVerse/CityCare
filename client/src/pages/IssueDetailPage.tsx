@@ -161,7 +161,7 @@ const IssueDetailPage: React.FC = () => {
       {issue.escalationLevel === 'critical' && (
         <div className="escalation-banner">
           <AlertTriangle size={20} />
-          <span><strong>CRITICAL DELAY</strong> — This high-priority issue has not been addressed for 48+ hours</span>
+          <span><strong>Needs Attention</strong> — This issue has been waiting for an update for over 48 hours.</span>
         </div>
       )}
 
@@ -239,16 +239,16 @@ const IssueDetailPage: React.FC = () => {
           <div className="card" style={{ marginBottom: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h3 style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Link2 size={18} /> Blockchain Audit Trail
+                <Link2 size={18} /> History & Updates
               </h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {auditValid !== null && (
                   <span className={`badge ${auditValid ? 'badge-resolved' : 'badge-reported'}`}>
-                    {auditValid ? <><CheckCircle2 size={12} /> Chain Valid</> : <><AlertCircle size={12} /> Chain Broken</>}
+                    {auditValid ? <><CheckCircle2 size={12} /> Verified Log</> : <><AlertCircle size={12} /> Sync Error</>}
                   </span>
                 )}
                 <button className="btn btn-ghost btn-sm" onClick={loadAuditTrail}>
-                  {showAudit ? 'Refresh' : 'Load Trail'}
+                  {showAudit ? 'Refresh' : 'See History'}
                 </button>
               </div>
             </div>
@@ -275,10 +275,10 @@ const IssueDetailPage: React.FC = () => {
                 ))}
               </div>
             ) : showAudit ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No audit entries yet.</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No updates yet.</p>
             ) : (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                Click "Load Trail" to view the tamper-proof history of this issue.
+                Click "See History" to view the secure timeline of this issue.
               </p>
             )}
           </div>

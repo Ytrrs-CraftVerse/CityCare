@@ -102,15 +102,15 @@ const HomePage: React.FC = () => {
       <section className="hero">
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.8rem', borderRadius: '9999px', background: 'var(--primary-glow)', border: '1px solid rgba(99,102,241,0.15)', fontSize: '0.78rem', color: 'var(--primary-light)', fontWeight: 600, marginBottom: '1.25rem' }}>
-            <Sparkles size={14} /> Smart City Platform
+            <Sparkles size={14} /> Community Board
           </div>
 
           <h1 className="hero-title">
-            Your City, Your Voice
+            Make your neighborhood better, together.
           </h1>
           <p className="hero-subtitle">
-            Report civic issues like potholes, broken streetlights, and garbage dumping.
-            Track progress and hold your city accountable — all in one platform.
+            Notice a pothole or a broken streetlight? Let us know. 
+            We make it easy to report issues, track progress, and see how your city is improving.
           </p>
           <div className="hero-actions">
             {user ? (
@@ -169,13 +169,13 @@ const HomePage: React.FC = () => {
       <section className="page">
         <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <TrendingUp size={22} className="text-primary" />
-          Quick Actions
+          What you can do
         </h2>
         <div className="grid-3">
           {[
-            { to: '/report', icon: MapPin, iconColor: 'var(--primary-light)', bg: 'var(--primary-glow)', title: 'Report Issue', desc: 'Pin a location and describe the problem', delay: 'delay-1' },
-            { to: '/dashboard', icon: LayoutDashboard, iconColor: 'var(--success)', bg: 'var(--success-bg)', title: 'Browse Issues', desc: 'View all reports on map or list', delay: 'delay-2' },
-            { to: '/analytics', icon: BarChart3, iconColor: 'var(--accent-light)', bg: 'var(--accent-glow)', title: 'View Analytics', desc: 'Track trends and resolution rates', delay: 'delay-3' },
+            { to: '/report', icon: MapPin, iconColor: 'var(--primary-light)', bg: 'var(--primary-glow)', title: 'Report an Issue', desc: 'Tell us what needs fixing in your area', delay: 'delay-1' },
+            { to: '/dashboard', icon: LayoutDashboard, iconColor: 'var(--success)', bg: 'var(--success-bg)', title: 'See What\'s Happening', desc: 'Browse what others have reported', delay: 'delay-2' },
+            { to: '/analytics', icon: BarChart3, iconColor: 'var(--accent-light)', bg: 'var(--accent-glow)', title: 'Check Progress', desc: 'See how fast things are getting done', delay: 'delay-3' },
           ].map((item) => (
             <Link key={item.to} to={item.to} style={{ textDecoration: 'none' }}>
               <div
@@ -217,10 +217,10 @@ const HomePage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h2 style={{ fontSize: '1.3rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <AlertTriangle size={22} style={{ color: 'var(--warning)' }} />
-                Recent Reports
+                Recently Reported
               </h2>
               <Link to="/dashboard" className="btn btn-ghost btn-sm">
-                View All <ArrowRight size={15} />
+                See more <ArrowRight size={15} />
               </Link>
             </div>
             <div className="grid">
