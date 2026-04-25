@@ -13,6 +13,7 @@ import issueRoutes from "./routes/issueRoutes";
 import projectRoutes from "./routes/projectRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import sensorRoutes from "./routes/sensorRoutes";
+import governanceRoutes from "./routes/governanceRoutes";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -27,6 +28,7 @@ app.use("/api/issues", issueRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/sensors", sensorRoutes);
+app.use("/api/governance", governanceRoutes);
 
 app.get("/", (_req, res) => {
   res.json({
@@ -36,7 +38,8 @@ app.get("/", (_req, res) => {
       issues: "/api/issues (CRUD, upvote, comments, verify, stats, duplicates, audit)",
       projects: "/api/projects (participatory budgeting)",
       notifications: "/api/notifications",
-      sensors: "/api/sensors (IoT simulation)",
+      sensors: "/api/sensors (Live Gov API data)",
+      governance: "/api/governance (Open311, Asset Discovery, QR Geofence, Forensics)",
     },
   });
 });
@@ -82,6 +85,15 @@ connectDB().then(async () => {
    GET    /api/notifications/unread-count
 
    GET    /api/sensors
+
+   GET    /api/governance/services          (Open311 Service Discovery)
+   GET    /api/governance/requests          (Open311 All Requests)
+   GET    /api/governance/requests/:id      (Open311 Single + Asset)
+   GET    /api/governance/asset-lookup      (OSM Road Discovery)
+   POST   /api/governance/verify-photo      (EXIF Forensics)
+   POST   /api/governance/qr/generate/:id   (Geo-fenced QR)
+   POST   /api/governance/qr/verify         (Proof of Fix)
+   POST   /api/governance/recalculate-priorities
 
 🔐 Admin:       admin@citycare.com / admin123
 🔐 Super-Admin: superadmin@citycare.com / super123

@@ -34,6 +34,18 @@ export interface IIssue extends Document {
   verifiedBy: Types.ObjectId[];
   verifiedCount: number;
   assignedTo?: Types.ObjectId;
+  governmentAsset?: {
+    assetId: string;
+    roadName: string;
+    roadType: string;
+    surface: string;
+    contractor: string;
+    constructionDate: string;
+    warrantyActive: boolean;
+    repairType: string;
+    agency: string;
+    source: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -89,6 +101,18 @@ const issueSchema = new Schema<IIssue>(
     verifiedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     verifiedCount: { type: Number, default: 0 },
     assignedTo: { type: Schema.Types.ObjectId, ref: "User" },
+    governmentAsset: {
+      assetId: String,
+      roadName: String,
+      roadType: String,
+      surface: String,
+      contractor: String,
+      constructionDate: String,
+      warrantyActive: Boolean,
+      repairType: String,
+      agency: String,
+      source: String,
+    },
   },
   { timestamps: true }
 );

@@ -7,6 +7,7 @@ import AuditLog from "../models/AuditLog";
 import { createAuditEntry, verifyAuditChain } from "../utils/auditTrail";
 import { analyzeSentiment, shouldAutoBumpPriority } from "../utils/sentiment";
 import { suggestCategory, estimateSeverity } from "../utils/categorize";
+import { discoverAsset } from "../utils/assetDiscovery";
 
 function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000;
@@ -50,6 +51,25 @@ export const createIssue = async (req: Request, res: Response, next: NextFunctio
       severity,
       priority,
     });
+
+    // Phase 1: Auto-discover road asset + contractor from OSM/Gov APIs
+    try {
+      const assetInfo = await discoverAsset(location.lat, location.lng);
+      issue.governmentAsset = {
+        assetId: assetInfo.governmentAssetId,
+        roadName: assetInfo.road.roadName,
+        roadType: assetInfo.road.roadType,
+        surface: assetInfo.road.surface,
+        contractor: assetInfo.contractor?.contractorName || "Unknown",
+        constructionDate: assetInfo.contractor?.constructionDate || "Unknown",
+        warrantyActive: assetInfo.contractor?.warrantyActive || false,
+        repairType: assetInfo.contractor?.repairType || "STANDARD_WORK_ORDER",
+        agency: assetInfo.contractor?.agency || "Municipal Corporation",
+        source: assetInfo.source,
+      };
+    } catch (assetErr: any) {
+      console.warn("[AssetDiscovery] Failed:", assetErr.message);
+    }
 
     const created = await issue.save();
 
