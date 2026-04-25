@@ -2,6 +2,7 @@ import axios from 'axios';
 import type {
   Issue, IssueStats, User, AuditEntry,
   Project, AppNotification, SensorZone, DigitalTwinCell,
+  ForensicResult, GeoFencedQR, Open311Service,
 } from '../types';
 
 const API = axios.create({
@@ -98,3 +99,28 @@ export const fetchSensorData = () => API.get<SensorZone[]>('/sensors');
 
 // === Digital Twin ===
 export const fetchDigitalTwinData = () => API.get<DigitalTwinCell[]>('/issues/digital-twin');
+
+// === Governance: Photo Forensics ===
+export const verifyPhoto = (data: {
+  reportedLat: number; reportedLng: number;
+  exifLat?: number; exifLng?: number; exifTimestamp?: string;
+}) => API.post<ForensicResult>('/governance/verify-photo', data);
+
+// === Governance: QR Code ===
+export const generateQRCode = (issueId: string) =>
+  API.post<GeoFencedQR>(`/governance/qr/generate/${issueId}`);
+
+// === Governance: Open311 ===
+export const fetchOpen311Services = () =>
+  API.get<Open311Service[]>('/governance/services');
+
+export const fetchOpen311Requests = (params?: { status?: string; service_code?: string }) =>
+  API.get('/governance/requests', { params });
+
+// === Governance: Asset Lookup ===
+export const lookupAsset = (lat: number, lng: number) =>
+  API.get('/governance/asset-lookup', { params: { lat, lng } });
+
+// === Governance: Priority Recalculation ===
+export const recalculatePriorities = () =>
+  API.post<{ message: string }>('/governance/recalculate-priorities');

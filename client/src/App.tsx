@@ -14,6 +14,8 @@ import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import ProjectsPage from './pages/ProjectsPage';
 import SensorsPage from './pages/SensorsPage';
+import DigitalTwinPage from './pages/DigitalTwinPage';
+import ApiExplorerPage from './pages/ApiExplorerPage';
 
 import './index.css';
 
@@ -36,6 +38,8 @@ function App() {
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/projects" element={<ProjectsPage />} />
                 <Route path="/sensors" element={<SensorsPage />} />
+                <Route path="/digital-twin" element={<DigitalTwinPage />} />
+                <Route path="/api-explorer" element={<ApiExplorerPage />} />
                 <Route path="/issues/:id" element={<IssueDetailPage />} />
                 <Route
                   path="/report"

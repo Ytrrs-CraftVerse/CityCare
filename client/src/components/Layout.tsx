@@ -18,6 +18,8 @@ import {
   Vote,
   Radio,
   X,
+  Layers,
+  Code2,
 } from 'lucide-react';
 
 interface Props {
@@ -94,6 +96,12 @@ const Layout: React.FC<Props> = ({ children }) => {
           </Link>
           <Link to="/sensors" className={`nav-link ${isActive('/sensors') ? 'active' : ''}`}>
             <Radio size={18} /> Live Health
+          </Link>
+          <Link to="/digital-twin" className={`nav-link ${isActive('/digital-twin') ? 'active' : ''}`}>
+            <Layers size={18} /> City Map
+          </Link>
+          <Link to="/api-explorer" className={`nav-link ${isActive('/api-explorer') ? 'active' : ''}`}>
+            <Code2 size={18} /> API
           </Link>
           {user && (
             <Link to="/report" className={`nav-link ${isActive('/report') ? 'active' : ''}`}>

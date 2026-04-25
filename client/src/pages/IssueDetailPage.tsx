@@ -3,13 +3,13 @@ import { useParams, Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { fetchIssueById, upvoteIssue, addComment, verifyIssue, fetchAuditTrail, verifyAuditTrail } from '../services/api';
+import { fetchIssueById, upvoteIssue, addComment, verifyIssue, fetchAuditTrail, verifyAuditTrail, generateQRCode } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import type { Issue, AuditEntry } from '../types';
+import type { Issue, AuditEntry, GeoFencedQR } from '../types';
 import {
   ArrowLeft, Clock, MapPin, ThumbsUp, MessageSquare, Send,
   AlertCircle, Loader2, ShieldCheck, Link2, CheckCircle2,
-  AlertTriangle, DollarSign, Flame, BadgeCheck, Building2, HardHat,
+  AlertTriangle, DollarSign, Flame, BadgeCheck, Building2, HardHat, QrCode,
 } from 'lucide-react';
 
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -30,6 +30,8 @@ const IssueDetailPage: React.FC = () => {
   const [auditValid, setAuditValid] = useState<boolean | null>(null);
   const [showAudit, setShowAudit] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [qrData, setQrData] = useState<GeoFencedQR | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -361,6 +363,53 @@ const IssueDetailPage: React.FC = () => {
             <p style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               {issue.location.coordinates[1].toFixed(5)}, {issue.location.coordinates[0].toFixed(5)}
             </p>
+          </div>
+
+          {/* QR Code for Proof of Fix */}
+          <div className="card" style={{ marginBottom: '1.25rem' }}>
+            <h3 style={{ marginBottom: '0.75rem', fontWeight: 600, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <QrCode size={18} style={{ color: 'var(--primary-light)' }} />
+              Verification QR
+            </h3>
+            {qrData ? (
+              <div style={{ textAlign: 'center' }}>
+                <img
+                  src={qrData.qrDataUrl}
+                  alt="Issue QR Code"
+                  style={{ width: '180px', height: '180px', borderRadius: 'var(--radius)', margin: '0 auto 0.5rem' }}
+                />
+                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>
+                  Asset: {qrData.assetId}
+                </p>
+                <p style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                  Contractors scan this on-site to confirm repairs.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                  Generate a geofenced QR code that contractors must scan from the exact location to prove repairs.
+                </p>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  disabled={qrLoading}
+                  onClick={async () => {
+                    setQrLoading(true);
+                    try {
+                      const res = await generateQRCode(issue._id);
+                      setQrData(res.data);
+                    } catch (err) {
+                      console.error(err);
+                    } finally {
+                      setQrLoading(false);
+                    }
+                  }}
+                >
+                  {qrLoading ? <Loader2 size={14} className="animate-spin" /> : <QrCode size={14} />}
+                  Generate QR Code
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Government Asset & Contractor Details */}

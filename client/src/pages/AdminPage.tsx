@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { fetchIssues, fetchStats, updateIssue, deleteIssue } from '../services/api';
+import { fetchIssues, fetchStats, updateIssue, deleteIssue, recalculatePriorities, verifyPhoto } from '../services/api';
 import type { Issue, IssueStats } from '../types';
 import {
   Shield, Activity, CheckCircle2, Clock, AlertCircle,
   Trash2, Eye, Loader2, DollarSign, AlertTriangle,
-  Flame, BadgeCheck,
+  Flame, BadgeCheck, RefreshCw, Camera,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -15,6 +15,10 @@ const AdminPage: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [editingCost, setEditingCost] = useState<string | null>(null);
   const [costValues, setCostValues] = useState<{ estimated: string; actual: string }>({ estimated: '', actual: '' });
+  const [recalculating, setRecalculating] = useState(false);
+  const [recalcMsg, setRecalcMsg] = useState<string | null>(null);
+  const [forensicResult, setForensicResult] = useState<any>(null);
+  const [forensicLoading, setForensicLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -111,6 +115,86 @@ const AdminPage: React.FC = () => {
         </h1>
         <p className="page-subtitle">Manage issues, update status, and track budgets</p>
       </div>
+
+      {/* Admin Actions */}
+      <div className="card" style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', padding: '1rem 1.25rem' }}>
+        <span style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-secondary)', marginRight: 'auto' }}>Quick Actions</span>
+        <button
+          className="btn btn-secondary btn-sm"
+          disabled={recalculating}
+          onClick={async () => {
+            setRecalculating(true);
+            setRecalcMsg(null);
+            try {
+              const res = await recalculatePriorities();
+              setRecalcMsg(res.data.message);
+              loadData();
+            } catch (err) {
+              setRecalcMsg('Failed to recalculate');
+            } finally {
+              setRecalculating(false);
+            }
+          }}
+        >
+          {recalculating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+          Recalculate Priorities
+        </button>
+        <button
+          className="btn btn-secondary btn-sm"
+          disabled={forensicLoading}
+          onClick={async () => {
+            setForensicLoading(true);
+            setForensicResult(null);
+            try {
+              // Demo forensic check using the first issue with location
+              const sample = issues.find((i) => i.location?.coordinates);
+              if (sample) {
+                const [lng, lat] = sample.location.coordinates;
+                const res = await verifyPhoto({ reportedLat: lat, reportedLng: lng });
+                setForensicResult(res.data);
+              }
+            } catch (err) {
+              console.error(err);
+            } finally {
+              setForensicLoading(false);
+            }
+          }}
+        >
+          {forensicLoading ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
+          Test Photo Forensics
+        </button>
+        {recalcMsg && (
+          <span style={{ fontSize: '0.82rem', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <CheckCircle2 size={14} /> {recalcMsg}
+          </span>
+        )}
+      </div>
+
+      {/* Forensic Result */}
+      {forensicResult && (
+        <div className="card" style={{ marginBottom: '1.5rem', border: `1px solid ${forensicResult.riskLevel === 'clean' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}` }}>
+          <h3 style={{ marginBottom: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Camera size={18} /> Photo Forensics Result
+          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <span className={`badge ${forensicResult.valid ? 'badge-resolved' : 'badge-reported'}`}>
+              {forensicResult.riskLevel.toUpperCase()}
+            </span>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              {forensicResult.valid ? 'All checks passed' : 'Issues detected'}
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.82rem' }}>
+            {Object.entries(forensicResult.checks).map(([key, check]: any) => (
+              <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: check.passed ? 'var(--success)' : 'var(--error)' }}>
+                {check.passed ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                <span>{check.detail}</span>
+              </div>
+            ))}
+          </div>
+          <button className="btn btn-ghost btn-sm" style={{ marginTop: '0.5rem' }} onClick={() => setForensicResult(null)}>Dismiss</button>
+        </div>
+      )}
 
       {/* Stats */}
       {stats && (

@@ -141,3 +141,32 @@ export interface DigitalTwinCell {
   categories: Record<string, number>;
   issues: { _id: string; title: string; category: string; priority: number }[];
 }
+
+export interface ForensicResult {
+  valid: boolean;
+  checks: {
+    gpsMatch: { passed: boolean; distance: number | null; detail: string };
+    timestampFresh: { passed: boolean; ageMinutes: number | null; detail: string };
+    hashUnique: { passed: boolean; detail: string };
+  };
+  riskLevel: 'clean' | 'suspicious' | 'fraudulent';
+}
+
+export interface GeoFencedQR {
+  qrDataUrl: string;
+  qrPayload: string;
+  assetId: string;
+  boundLat: number;
+  boundLng: number;
+  issuedAt: string;
+}
+
+export interface Open311Service {
+  service_code: string;
+  service_name: string;
+  description: string;
+  metadata: boolean;
+  type: string;
+  keywords: string;
+  group: string;
+}
