@@ -47,20 +47,100 @@ CityCare empowers citizens to **report civic issues** — potholes, broken stree
 
 ### Homepage
 > Hero section with animated stat counters, quick action cards, and recent issues feed.
+![Homepage](docs/assets/screenshot-home.png)
 
 ### Login
 > Glassmorphism auth card with admin credentials hint.
+![Login](docs/assets/screenshot-login.png)
 
-### Dashboard
-> Map/list toggle with search & category/status filters.
+### Community Board (Dashboard)
+> High-performance vector map toggle with search & category/status filters.
+![Community Board](docs/assets/screenshot-dashboard.png)
+
+### Report an Issue
+> Agent-driven photo upload with drag-and-drop and location pinpointing.
+![Report Issue](docs/assets/screenshot-report.png)
+
+### Digital Twin
+> City heatmap visualizing issue density clusters.
+![Digital Twin](docs/assets/screenshot-digital-twin.png)
 
 ### Analytics
 > Real-time charts with resolution rate tracking.
+![Analytics](docs/assets/screenshot-analytics.png)
+
+### API Explorer
+> Open311 Developer API Explorer for civic interoperability.
+![API Explorer](docs/assets/screenshot-api-explorer.png)
 
 ### Admin Panel
-> Full issue management table with inline status updates.
+> Full issue management table with inline status updates, photo forensics, and QR generation.
+![Admin Panel](docs/assets/screenshot-admin.png)
 
 </details>
+
+---
+
+## 🔄 Project Flow & AI Pipelines
+
+CityCare operates on a highly automated, agent-driven architecture designed to minimize manual administrative work.
+
+```mermaid
+graph TD
+    %% Roles
+    Citizen([Citizen / User])
+    Contractor([City Contractor])
+    Admin([City Administrator])
+
+    %% Input Nodes
+    Citizen -- "Uploads Photo & Sets GPS" --> ReportForm(Report Issue Form)
+    ReportForm -- "Submits Data" --> Backend{API Gateway}
+
+    %% AI Pipeline
+    subgraph AI Processing Pipeline
+        Backend --> Sentiment[NLP Sentiment Analysis]
+        Backend --> DuplicateCheck[Geospatial Duplicate Detection]
+        Backend --> Categorization[AI Auto-Categorization]
+        Backend --> Forensics[EXIF & Hash Photo Forensics]
+        Backend --> AssetDiscovery[OSM Asset Discovery]
+        
+        Sentiment -.-> Priority[Priority Auto-Bump]
+        Forensics -.-> Verification[Photo Verification State]
+    end
+
+    %% Data Storage
+    Priority --> DB[(MongoDB Geo-Database)]
+    DuplicateCheck --> DB
+    Categorization --> DB
+    Verification --> DB
+    AssetDiscovery --> DB
+
+    %% Output & Management
+    DB --> Dashboard[Community Board]
+    DB --> DigitalTwin[Digital Twin Heatmap]
+    DB --> AdminPanel[Admin Panel]
+
+    %% Governance & Resolution
+    AdminPanel -- "Assigns Task & Generates QR" --> QRPayload(Geofenced QR Code)
+    QRPayload -- "Scanned On-Site" --> Contractor
+    Contractor -- "Verifies GPS via Scan" --> Resolution(Issue Resolved)
+    Resolution --> DB
+    
+    %% Output Feeds
+    DB -.-> Open311(Open311 API Feed)
+    
+    classDef default fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#fff;
+    classDef database fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#fff;
+    classDef user fill:#6b21a8,stroke:#d946ef,stroke-width:2px,color:#fff;
+    
+    class Citizen,Contractor,Admin user;
+    class DB database;
+```
+
+**Key Pipeline Stages:**
+1. **Intelligent Ingestion**: When a citizen submits a report, the text undergoes sentiment analysis (bumping priority for urgent complaints), and the image undergoes EXIF extraction and hash-checking to prevent duplicate spam.
+2. **Geospatial Discovery**: The GPS coordinates are cross-referenced with OpenStreetMap to automatically discover the specific road asset and responsible contractor.
+3. **Verification & Resolution**: Admins can generate a geofenced, cryptographically signed QR code. Contractors must physically scan this code at the exact coordinates of the issue to prove it was fixed.
 
 ---
 
