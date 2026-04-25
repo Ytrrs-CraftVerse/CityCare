@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Flame,
   BadgeCheck,
+  Building2,
 } from 'lucide-react';
 
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -209,6 +210,32 @@ const DashboardPage: React.FC = () => {
                     </span>
                   </div>
                 </div>
+                {/* Contractor & Warranty Info */}
+                {issue.governmentAsset && (
+                  <div style={{
+                    marginTop: '0.6rem',
+                    paddingTop: '0.6rem',
+                    borderTop: '1px solid var(--border-light)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.35rem',
+                    fontSize: '0.75rem',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: 'var(--text-secondary)' }}>
+                      <Building2 size={12} style={{ color: 'var(--teal)' }} />
+                      <span style={{ fontWeight: 600 }}>{issue.governmentAsset.roadName}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>• {issue.governmentAsset.roadType}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>
+                        🏗️ {issue.governmentAsset.contractor}
+                      </span>
+                      <span className={`badge ${issue.governmentAsset.warrantyActive ? 'badge-resolved' : 'badge-reported'}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
+                        {issue.governmentAsset.warrantyActive ? '✅ Warranty Active' : '❌ Expired'}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </Link>
           ))}

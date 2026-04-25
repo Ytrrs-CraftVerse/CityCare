@@ -49,6 +49,18 @@ export interface Issue {
   severity: 'low' | 'medium' | 'high' | 'critical';
   verifiedBy: string[];
   verifiedCount: number;
+  governmentAsset?: {
+    assetId: string;
+    roadName: string;
+    roadType: string;
+    surface: string;
+    contractor: string;
+    constructionDate: string;
+    warrantyActive: boolean;
+    repairType: string;
+    agency: string;
+    source: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

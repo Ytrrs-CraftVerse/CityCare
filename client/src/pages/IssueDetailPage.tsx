@@ -9,7 +9,7 @@ import type { Issue, AuditEntry } from '../types';
 import {
   ArrowLeft, Clock, MapPin, ThumbsUp, MessageSquare, Send,
   AlertCircle, Loader2, ShieldCheck, Link2, CheckCircle2,
-  AlertTriangle, DollarSign, Flame, BadgeCheck,
+  AlertTriangle, DollarSign, Flame, BadgeCheck, Building2, HardHat,
 } from 'lucide-react';
 
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -362,6 +362,90 @@ const IssueDetailPage: React.FC = () => {
               {issue.location.coordinates[1].toFixed(5)}, {issue.location.coordinates[0].toFixed(5)}
             </p>
           </div>
+
+          {/* Government Asset & Contractor Details */}
+          {issue.governmentAsset && (
+            <div className="card" style={{ marginBottom: '1.25rem' }}>
+              <h3 style={{ marginBottom: '0.75rem', fontWeight: 600, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Building2 size={18} style={{ color: 'var(--teal)' }} />
+                Road & Contractor
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Road Name</span>
+                  <span style={{ fontWeight: 600, textAlign: 'right', maxWidth: '55%' }}>{issue.governmentAsset.roadName}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Asset ID</span>
+                  <span style={{ fontWeight: 600, fontFamily: 'monospace', fontSize: '0.78rem' }}>{issue.governmentAsset.assetId}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Road Type</span>
+                  <span className="badge badge-category" style={{ textTransform: 'capitalize' }}>{issue.governmentAsset.roadType}</span>
+                </div>
+                {issue.governmentAsset.surface !== 'unknown' && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Surface</span>
+                    <span style={{ fontWeight: 600, textTransform: 'capitalize' }}>{issue.governmentAsset.surface}</span>
+                  </div>
+                )}
+
+                <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                    <HardHat size={14} /> Contractor Info
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Contractor</span>
+                  <span style={{ fontWeight: 600, textAlign: 'right', maxWidth: '55%', fontSize: '0.8rem' }}>{issue.governmentAsset.contractor}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Agency</span>
+                  <span style={{ fontWeight: 600 }}>{issue.governmentAsset.agency}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Last Repair</span>
+                  <span style={{ fontWeight: 600 }}>{new Date(issue.governmentAsset.constructionDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Warranty</span>
+                  <span className={`badge ${issue.governmentAsset.warrantyActive ? 'badge-resolved' : 'badge-reported'}`}>
+                    {issue.governmentAsset.warrantyActive ? '✅ Active' : '❌ Expired'}
+                  </span>
+                </div>
+                {issue.governmentAsset.warrantyActive && (
+                  <div style={{
+                    marginTop: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    background: 'rgba(34,197,94,0.08)',
+                    border: '1px solid rgba(34,197,94,0.2)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.78rem',
+                    color: '#22c55e',
+                    fontWeight: 600,
+                  }}>
+                    🏗️ Repair Type: NO-COST DLP CLAIM — Original contractor is liable for free repair
+                  </div>
+                )}
+                {!issue.governmentAsset.warrantyActive && (
+                  <div style={{
+                    marginTop: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    background: 'rgba(239,68,68,0.06)',
+                    border: '1px solid rgba(239,68,68,0.15)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.78rem',
+                    color: 'var(--text-muted)',
+                  }}>
+                    📋 Standard Work Order — Warranty expired, municipal budget required
+                  </div>
+                )}
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                  Source: {issue.governmentAsset.source}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="card">
             <h3 style={{ marginBottom: '0.75rem', fontWeight: 600, fontSize: '0.95rem' }}>Details</h3>
