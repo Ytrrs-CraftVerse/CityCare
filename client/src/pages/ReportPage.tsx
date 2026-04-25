@@ -72,7 +72,7 @@ const ReportPage: React.FC = () => {
             severity: res.data.estimatedSeverity,
           });
         }
-      } catch {}
+      } catch { }
     }
   };
 

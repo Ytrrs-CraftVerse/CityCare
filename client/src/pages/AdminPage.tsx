@@ -39,6 +39,7 @@ const AdminPage: React.FC = () => {
       setIssues((prev) =>
         prev.map((i) => (i._id === id ? { ...i, status: newStatus as any } : i))
       );
+      fetchStats();
     } catch (err) {
       console.error(err);
     } finally {
@@ -52,6 +53,7 @@ const AdminPage: React.FC = () => {
     try {
       await deleteIssue(id);
       setIssues((prev) => prev.filter((i) => i._id !== id));
+      fetchStats();
     } catch (err) {
       console.error(err);
     } finally {
@@ -82,8 +84,10 @@ const AdminPage: React.FC = () => {
         )
       );
       setEditingCost(null);
-    } catch (err) {
+      fetchStats();
+    } catch (err: any) {
       console.error(err);
+      alert(err.response?.data?.message || "Failed to update cost");
     } finally {
       setActionLoading(null);
     }
@@ -234,10 +238,17 @@ const AdminPage: React.FC = () => {
                       <button
                         className="btn btn-ghost btn-sm"
                         onClick={() => handleCostEdit(issue)}
-                        style={{ fontSize: '0.75rem' }}
+                        style={{ fontSize: '0.75rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                       >
-                        <DollarSign size={12} />
-                        {issue.estimatedCost > 0 ? `₹${issue.estimatedCost.toLocaleString()}` : 'Set cost'}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                          <DollarSign size={12} />
+                          {(issue.estimatedCost > 0 || issue.actualCost > 0) ? (
+                            <div style={{ textAlign: 'left' }}>
+                              <div>Est: ₹{issue.estimatedCost.toLocaleString()}</div>
+                              <div>Act: ₹{issue.actualCost.toLocaleString()}</div>
+                            </div>
+                          ) : 'Set cost'}
+                        </div>
                       </button>
                     )}
                   </td>
