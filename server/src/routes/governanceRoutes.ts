@@ -80,20 +80,35 @@ router.get("/asset-lookup", async (req: Request, res: Response, next: NextFuncti
 });
 
 // ─── Photo Forensics Endpoint ───────────────────────────────────────────────
-router.post("/verify-photo", (req: Request, res: Response) => {
-  const { reportedLat, reportedLng, exifLat, exifLng, exifTimestamp } = req.body;
+import path from "path";
+import fs from "fs";
+
+router.post("/verify-photo", async (req: Request, res: Response) => {
+  const { reportedLat, reportedLng, imageUrl, exifLat, exifLng, exifTimestamp } = req.body;
 
   if (reportedLat == null || reportedLng == null) {
     res.status(400).json({ message: "reportedLat and reportedLng are required" });
     return;
   }
 
-  const result = runForensics(reportedLat, reportedLng, {
+  const photoMeta: any = {
     exifLat,
     exifLng,
     exifTimestamp,
-  });
+  };
 
+  if (imageUrl) {
+    try {
+      const filePath = path.join(__dirname, "../../", imageUrl);
+      if (fs.existsSync(filePath)) {
+        photoMeta.imageBuffer = fs.readFileSync(filePath);
+      }
+    } catch (err) {
+      console.error("Error reading image for forensics:", err);
+    }
+  }
+
+  const result = await runForensics(reportedLat, reportedLng, photoMeta);
   res.json(result);
 });
 

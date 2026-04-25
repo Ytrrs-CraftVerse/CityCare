@@ -41,18 +41,40 @@ export interface PhotoMetadata {
 }
 
 // ─── Main Forensic Check ────────────────────────────────────────────────────
-export function runForensics(
+import exifParser from "exif-parser";
+
+export async function runForensics(
   reportedLat: number,
   reportedLng: number,
   photoMeta: PhotoMetadata,
   maxDistanceMeters: number = 200,
   maxAgeMinutes: number = 60
-): ForensicResult {
+): Promise<ForensicResult> {
   const checks: ForensicResult["checks"] = {
     gpsMatch: { passed: true, distance: null, detail: "No EXIF GPS data to compare" },
     timestampFresh: { passed: true, ageMinutes: null, detail: "No EXIF timestamp to compare" },
     hashUnique: { passed: true, detail: "No image data to hash" },
   };
+
+  // Agentic EXIF Extraction
+  if (photoMeta.imageBuffer && photoMeta.imageBuffer.length > 0) {
+    try {
+      const parser = exifParser.create(photoMeta.imageBuffer);
+      const result = parser.parse();
+      if (result.tags) {
+        if (result.tags.GPSLatitude && result.tags.GPSLongitude) {
+          photoMeta.exifLat = result.tags.GPSLatitude;
+          photoMeta.exifLng = result.tags.GPSLongitude;
+        }
+        if (result.tags.DateTimeOriginal) {
+          // DateTimeOriginal is usually a unix timestamp in seconds
+          photoMeta.exifTimestamp = new Date(result.tags.DateTimeOriginal * 1000).toISOString();
+        }
+      }
+    } catch (err) {
+      console.log("Agent: Could not parse EXIF, image might not have metadata.");
+    }
+  }
 
   let flags = 0;
 
@@ -68,6 +90,9 @@ export function runForensics(
         : `MISMATCH: Photo was taken ${Math.round(distance)}m away from reported location`,
     };
     if (!passed) flags++;
+  } else {
+    checks.gpsMatch = { passed: false, distance: null, detail: "No GPS EXIF Data found. Cannot verify location." };
+    flags++;
   }
 
   // ─── Check 2: Timestamp Freshness ─────────────────────────────────────
@@ -84,6 +109,9 @@ export function runForensics(
         : `STALE: Photo is ${ageMinutes} minutes old (max allowed: ${maxAgeMinutes}min)`,
     };
     if (!passed) flags++;
+  } else {
+    checks.timestampFresh = { passed: false, ageMinutes: null, detail: "No Timestamp EXIF Data found. Cannot verify freshness." };
+    flags++;
   }
 
   // ─── Check 3: Duplicate Image Hash ────────────────────────────────────

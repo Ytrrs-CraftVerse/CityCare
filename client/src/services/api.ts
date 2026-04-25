@@ -112,6 +112,7 @@ export const fetchDigitalTwinData = () => API.get<DigitalTwinCell[]>('/issues/di
 // === Governance: Photo Forensics ===
 export const verifyPhoto = (data: {
   reportedLat: number; reportedLng: number;
+  imageUrl?: string;
   exifLat?: number; exifLng?: number; exifTimestamp?: string;
 }) => API.post<ForensicResult>('/governance/verify-photo', data);
 

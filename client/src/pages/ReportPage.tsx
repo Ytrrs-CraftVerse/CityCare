@@ -23,6 +23,7 @@ const ReportPage: React.FC = () => {
   const [category, setCategory] = useState('pothole');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([19.076, 72.877]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -39,6 +40,23 @@ const ReportPage: React.FC = () => {
   const [forensicLoading, setForensicLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          setMapCenter([lat, lng]);
+          setLocation({ lat, lng }); // Auto-pin current location
+        },
+        (err) => {
+          console.log('Geolocation denied or failed:', err);
+        },
+        { enableHighAccuracy: true }
+      );
+    }
+  }, []);
 
   const checkDuplicates = useCallback(async (lat: number, lng: number, cat: string) => {
     try {
@@ -99,7 +117,7 @@ const ReportPage: React.FC = () => {
 
       // Auto-run forensics if location is already set
       if (location) {
-        runForensics(location.lat, location.lng);
+        runForensics(location.lat, location.lng, res.data.imageUrl);
       }
     } catch (err) {
       setError('Photo upload failed. Try again.');
@@ -108,10 +126,11 @@ const ReportPage: React.FC = () => {
     }
   };
 
-  const runForensics = async (lat: number, lng: number) => {
+  const runForensics = async (lat: number, lng: number, imageUrlOverride?: string) => {
     setForensicLoading(true);
     try {
-      const res = await verifyPhoto({ reportedLat: lat, reportedLng: lng });
+      const url = imageUrlOverride || uploadedImageUrl;
+      const res = await verifyPhoto({ reportedLat: lat, reportedLng: lng, imageUrl: url || undefined });
       setForensicResult(res.data);
     } catch {
       // Forensics is optional, don't block submission
@@ -436,8 +455,8 @@ const ReportPage: React.FC = () => {
             )}
             <div style={{ borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)' }}>
               <MapLibre 
-                center={[19.076, 72.877]} 
-                zoom={13} 
+                center={mapCenter} 
+                zoom={14} 
                 height="350px"
                 onClick={handleLocationSelect}
                 singleMarker={location || undefined}
