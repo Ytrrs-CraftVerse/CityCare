@@ -27,15 +27,16 @@ CityCare empowers citizens to **report civic issues** — potholes, broken stree
 
 | Feature | Description |
 |---------|-------------|
-| 🗺️ **Map-Based Reporting** | Click-to-pin location on an interactive dark-themed map |
+| 🗺️ **Vector Maps** | Interactive, high-performance vector maps using MapLibre GL JS |
+| 📸 **Agentic Photo Uploads** | Drag-and-drop photos with auto AI forensics (EXIF & Hash checks) |
+| 🤖 **AI Agent Workflows** | Auto-categorization, duplicate detection, and sentiment-based priority bumping |
+| 🏢 **Digital Twin** | City heatmap visualizing issue density clusters |
+| 🔌 **Open311 API** | Developer-friendly API explorer for civic interoperability |
+| 📱 **Proof of Fix** | Geofenced QR Code generation for contractors to verify repairs on-site |
 | 🔐 **Authentication** | JWT-based login/register with citizen & admin roles |
-| 🛡️ **Admin Panel** | Manage all issues — update status, delete reports |
+| 🛡️ **Admin Panel** | Manage all issues, track budgets, run forensics, recalculate priorities |
 | 📊 **Analytics Dashboard** | Bar & doughnut charts for category/status breakdown |
 | 👍 **Upvotes & Comments** | Citizens can upvote issues and leave comments |
-| 🔍 **Search & Filter** | Filter by category, status, or keyword search |
-| 👤 **User Profiles** | View personal report history and stats |
-| 🌙 **Premium Dark UI** | Glassmorphism, gradient accents, animated counters |
-| 📱 **Responsive** | Works on desktop, tablet, and mobile |
 
 ---
 
@@ -70,7 +71,7 @@ CityCare empowers citizens to **report civic issues** — potholes, broken stree
 - **TypeScript** — Type-safe development
 - **Vite 8** — Lightning-fast HMR and builds
 - **React Router** — Client-side multi-page routing
-- **Leaflet** + **React-Leaflet** — Interactive maps with dark tiles
+- **MapLibre GL JS** — High-performance interactive vector maps
 - **Chart.js** + **React-Chartjs-2** — Analytics visualizations
 - **Lucide React** — Beautiful icon library
 - **Axios** — HTTP client with JWT interceptor
@@ -78,6 +79,7 @@ CityCare empowers citizens to **report civic issues** — potholes, broken stree
 ### Backend
 - **Node.js** + **Express** — REST API server
 - **MongoDB** + **Mongoose** — Document database with geospatial indexing
+- **Multer** — Multipart file upload handling
 - **JWT** (jsonwebtoken) — Stateless authentication
 - **bcryptjs** — Secure password hashing
 - **CORS** — Cross-origin resource sharing
@@ -226,10 +228,21 @@ Once both servers are running:
 | `GET` | `/api/issues/my` | User's own issues | Auth |
 | `GET` | `/api/issues/:id` | Get single issue | Public |
 | `POST` | `/api/issues` | Create new issue | Auth |
+| `POST` | `/api/issues/upload-image` | Upload an image via multipart | Auth |
 | `POST` | `/api/issues/:id/upvote` | Upvote an issue | Auth |
 | `POST` | `/api/issues/:id/comments` | Add comment | Auth |
 | `PUT` | `/api/issues/:id` | Update issue (status) | Admin |
 | `DELETE` | `/api/issues/:id` | Delete issue | Admin |
+
+### Governance (Agentic Features)
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| `POST` | `/api/governance/verify-photo` | AI Forensics EXIF & Hash check | Admin |
+| `POST` | `/api/governance/qr/generate/:id`| Generate Geofenced QR for repair | Admin |
+| `GET` | `/api/governance/services` | Open311 standard service codes | Public |
+| `GET` | `/api/governance/requests` | Open311 live request feed | Public |
+| `GET` | `/api/governance/asset-lookup` | Auto-discover road/contractor by GPS| Public |
+| `POST` | `/api/governance/recalculate-priorities`| Batch algorithmic priority update | Admin |
 
 ---
 
@@ -252,7 +265,10 @@ The UI follows a **premium dark theme** design language:
 | `/` | Home | Public |
 | `/login` | Login | Public |
 | `/register` | Register | Public |
-| `/dashboard` | Dashboard | Public |
+| `/dashboard` | Community Board (Map/List) | Public |
+| `/sensors` | Live Health (Sensors) | Public |
+| `/digital-twin` | City Map Heatmap | Public |
+| `/api-explorer` | Open311 API Explorer | Public |
 | `/report` | Report Issue | 🔒 Logged in |
 | `/analytics` | Analytics | Public |
 | `/issues/:id` | Issue Detail | Public |
