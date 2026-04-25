@@ -43,7 +43,16 @@ export const reportIssue = (data: {
   description: string;
   category: string;
   location: { lat: number; lng: number; address?: string };
+  image?: string;
 }) => API.post<Issue>('/issues', data);
+
+export const uploadImage = (file: File) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  return API.post<{ imageUrl: string; filename: string; size: number }>('/issues/upload-image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
 
 export const updateIssue = (id: string, data: Partial<Issue>) =>
   API.put<Issue>(`/issues/${id}`, data);

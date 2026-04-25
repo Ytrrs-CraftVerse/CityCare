@@ -1,5 +1,6 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { protect, optionalAuth, adminOnly } from "../middleware/authMiddleware";
+import { upload } from "../middleware/upload";
 import {
   createIssue, getIssues, getIssueById, updateIssue, deleteIssue,
   upvoteIssue, addComment, verifyIssue, getMyIssues, getStats,
@@ -15,6 +16,15 @@ router.get("/nearby", getNearbyIssues);
 router.get("/duplicates", findDuplicates);
 router.get("/digital-twin", getDigitalTwinData);
 router.post("/suggest-category", suggestCategoryFromText);
+
+router.post("/upload-image", optionalAuth, upload.single("image"), (req: Request, res: Response) => {
+  if (!req.file) {
+    res.status(400).json({ message: "No image file provided" });
+    return;
+  }
+  const imageUrl = `/uploads/${req.file.filename}`;
+  res.json({ imageUrl, filename: req.file.filename, size: req.file.size });
+});
 
 router.post("/", optionalAuth, createIssue);
 router.get("/", getIssues);

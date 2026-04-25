@@ -227,6 +227,26 @@ const IssueDetailPage: React.FC = () => {
                 </span>
               )}
             </div>
+
+            {/* Attached Photo */}
+            {issue.image && (
+              <div style={{ marginTop: '1.25rem' }}>
+                <img
+                  src={issue.image.startsWith('http') ? issue.image : `http://localhost:5000${issue.image}`}
+                  alt={issue.title}
+                  style={{
+                    width: '100%',
+                    maxHeight: '400px',
+                    objectFit: 'cover',
+                    borderRadius: 'var(--radius)',
+                    border: '1px solid var(--border)',
+                  }}
+                />
+                <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+                  📸 Photo submitted with this report
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Audit Trail */}

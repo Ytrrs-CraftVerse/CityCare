@@ -1,9 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapLibre from '../components/MapLibre';
-import { reportIssue, fetchDuplicates, suggestCategory } from '../services/api';
+import { reportIssue, fetchDuplicates, suggestCategory, uploadImage, verifyPhoto } from '../services/api';
 import type { Issue } from '../types';
-import { MapPin, Send, Loader2, CheckCircle2, AlertTriangle, Sparkles } from 'lucide-react';
+import {
+  MapPin, Send, Loader2, CheckCircle2, AlertTriangle, Sparkles,
+  Camera, Upload, X, ShieldCheck, AlertCircle, Image as ImageIcon,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const categories = [
@@ -27,6 +30,16 @@ const ReportPage: React.FC = () => {
   const [aiSuggestion, setAiSuggestion] = useState<{ category: string | null; severity: string } | null>(null);
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
 
+  // Photo state
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [forensicResult, setForensicResult] = useState<any>(null);
+  const [forensicLoading, setForensicLoading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const checkDuplicates = useCallback(async (lat: number, lng: number, cat: string) => {
     try {
       const res = await fetchDuplicates(lat, lng, cat);
@@ -45,6 +58,11 @@ const ReportPage: React.FC = () => {
   const handleLocationSelect = (lat: number, lng: number) => {
     setLocation({ lat, lng });
     checkDuplicates(lat, lng, category);
+
+    // Auto-run forensics if photo is already uploaded
+    if (uploadedImageUrl) {
+      runForensics(lat, lng);
+    }
   };
 
   const handleCategoryChange = (cat: string) => {
@@ -68,7 +86,56 @@ const ReportPage: React.FC = () => {
     }
   };
 
+  const handlePhotoSelect = async (file: File) => {
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    setForensicResult(null);
 
+    // Upload immediately
+    setUploadingPhoto(true);
+    try {
+      const res = await uploadImage(file);
+      setUploadedImageUrl(res.data.imageUrl);
+
+      // Auto-run forensics if location is already set
+      if (location) {
+        runForensics(location.lat, location.lng);
+      }
+    } catch (err) {
+      setError('Photo upload failed. Try again.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const runForensics = async (lat: number, lng: number) => {
+    setForensicLoading(true);
+    try {
+      const res = await verifyPhoto({ reportedLat: lat, reportedLng: lng });
+      setForensicResult(res.data);
+    } catch {
+      // Forensics is optional, don't block submission
+    } finally {
+      setForensicLoading(false);
+    }
+  };
+
+  const removePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setUploadedImageUrl(null);
+    setForensicResult(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      handlePhotoSelect(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +147,13 @@ const ReportPage: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      await reportIssue({ title, description, category, location });
+      await reportIssue({
+        title,
+        description,
+        category,
+        location,
+        image: uploadedImageUrl || undefined,
+      });
       setSuccess(true);
       setTimeout(() => navigate('/dashboard'), 2000);
     } catch (err: any) {
@@ -221,6 +294,137 @@ const ReportPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Photo Upload Section */}
+          <div className="card" style={{ marginBottom: '1.25rem' }}>
+            <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Camera size={20} style={{ color: 'var(--primary-light)' }} />
+              Add a Photo
+              <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '0.82rem', marginLeft: '0.25rem' }}>(recommended)</span>
+            </h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+              Photos help us verify and prioritize issues faster. Our AI agent checks GPS and timestamp data automatically.
+            </p>
+
+            {photoPreview ? (
+              <div style={{ position: 'relative' }}>
+                <img
+                  src={photoPreview}
+                  alt="Issue preview"
+                  style={{
+                    width: '100%',
+                    maxHeight: '280px',
+                    objectFit: 'cover',
+                    borderRadius: 'var(--radius)',
+                    border: '1px solid var(--border)',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={removePhoto}
+                  style={{
+                    position: 'absolute', top: '0.5rem', right: '0.5rem',
+                    width: '32px', height: '32px', borderRadius: '50%',
+                    background: 'rgba(0,0,0,0.7)', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'white',
+                  }}
+                >
+                  <X size={16} />
+                </button>
+
+                {/* Upload status overlay */}
+                {uploadingPhoto && (
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                    padding: '0.75rem', background: 'rgba(0,0,0,0.7)',
+                    borderRadius: '0 0 var(--radius) var(--radius)',
+                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                    fontSize: '0.82rem', color: 'white',
+                  }}>
+                    <Loader2 size={14} className="animate-spin" /> Uploading...
+                  </div>
+                )}
+                {uploadedImageUrl && !uploadingPhoto && (
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                    padding: '0.75rem', background: 'rgba(0,0,0,0.7)',
+                    borderRadius: '0 0 var(--radius) var(--radius)',
+                    display: 'flex', alignItems: 'center', gap: '0.5rem',
+                    fontSize: '0.82rem', color: '#22c55e',
+                  }}>
+                    <CheckCircle2 size={14} /> Photo uploaded successfully
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                style={{
+                  border: `2px dashed ${dragOver ? 'var(--primary)' : 'var(--border)'}`,
+                  borderRadius: 'var(--radius)',
+                  padding: '2.5rem 1.5rem',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  background: dragOver ? 'rgba(99,102,241,0.05)' : 'transparent',
+                }}
+              >
+                <Upload size={36} style={{ color: dragOver ? 'var(--primary)' : 'var(--text-muted)', marginBottom: '0.5rem' }} />
+                <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+                  Drag a photo here or click to browse
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  JPG, PNG, or WebP — max 10 MB
+                </p>
+              </div>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handlePhotoSelect(file);
+              }}
+            />
+
+            {/* Forensic Results */}
+            {forensicLoading && (
+              <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                <Loader2 size={14} className="animate-spin" /> Running AI verification checks...
+              </div>
+            )}
+            {forensicResult && (
+              <div style={{
+                marginTop: '0.75rem', padding: '0.75rem',
+                borderRadius: 'var(--radius-sm)',
+                background: forensicResult.valid ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)',
+                border: `1px solid ${forensicResult.valid ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: 600 }}>
+                  {forensicResult.valid
+                    ? <><ShieldCheck size={16} style={{ color: 'var(--success)' }} /> Photo checks passed</>
+                    : <><AlertCircle size={16} style={{ color: 'var(--error)' }} /> Issues detected</>
+                  }
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  {Object.entries(forensicResult.checks).map(([key, check]: any) => (
+                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem', color: check.passed ? 'var(--success)' : 'var(--error)' }}>
+                      {check.passed ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
+                      <span>{check.detail}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="card" style={{ marginBottom: '1.25rem' }}>
             <h3 style={{ marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 600 }}>
               📍 Where is it? <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: '0.85rem' }}>(Tap on the map)</span>
@@ -241,9 +445,9 @@ const ReportPage: React.FC = () => {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading}>
+          <button type="submit" className="btn btn-primary btn-lg w-full" disabled={loading || uploadingPhoto}>
             {loading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
-            {loading ? 'Submitting...' : 'Submit Report'}
+            {loading ? 'Submitting...' : uploadingPhoto ? 'Uploading photo...' : 'Submit Report'}
           </button>
         </form>
       </div>
