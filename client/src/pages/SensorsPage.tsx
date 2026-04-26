@@ -105,15 +105,15 @@ const SensorsPage: React.FC = () => {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e' }} />
-            <strong>Air Quality:</strong> WAQI / CPCB India (Central Pollution Control Board)
+            <strong>Air Quality:</strong> <a href="https://aqicn.org/" target="_blank" rel="noopener noreferrer" style={{ color: '#22c55e', textDecoration: 'underline' }}>WAQI</a> / <a href="https://cpcb.nic.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#22c55e', textDecoration: 'underline' }}>CPCB India</a> (Central Pollution Control Board)
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6' }} />
-            <strong>Water Quality:</strong> data.gov.in / CPCB RTWQMS
+            <strong>Water Quality:</strong> <a href="https://data.gov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>data.gov.in</a> / <a href="https://rtwqms.cpcb.gov.in/" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>CPCB RTWQMS</a>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#eab308' }} />
-            <strong>Noise Level:</strong> CPCB Ambient Noise Standards (zone-type estimate)
+            <strong>Noise Level:</strong> <a href="https://cpcb.nic.in/noise-standards-ambient/" target="_blank" rel="noopener noreferrer" style={{ color: '#eab308', textDecoration: 'underline' }}>CPCB Ambient Noise Standards</a> (zone-type estimate)
           </div>
         </div>
       </div>
