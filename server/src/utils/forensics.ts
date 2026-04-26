@@ -41,6 +41,7 @@ export interface PhotoMetadata {
 }
 
 // ─── Main Forensic Check ────────────────────────────────────────────────────
+// @ts-ignore
 import exifParser from "exif-parser";
 
 export async function runForensics(

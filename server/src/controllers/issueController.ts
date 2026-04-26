@@ -8,6 +8,7 @@ import { createAuditEntry, verifyAuditChain } from "../utils/auditTrail";
 import { analyzeSentiment, shouldAutoBumpPriority } from "../utils/sentiment";
 import { suggestCategory, estimateSeverity } from "../utils/categorize";
 import { discoverAsset } from "../utils/assetDiscovery";
+import { processComplaint } from "../agents/supervisorAgent";
 
 function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000;
@@ -72,6 +73,29 @@ export const createIssue = async (req: Request, res: Response, next: NextFunctio
     }
 
     const created = await issue.save();
+
+    try {
+      const agentResult = await processComplaint({
+        complaintId: created._id.toString(),
+        MIS: req.user?._id.toString() || "Anonymous",
+        description: `${title}: ${description}`,
+        images: image ? [image] : [],
+        priority: priority,
+      });
+
+      if (agentResult.category && agentResult.category !== category) {
+        created.category = agentResult.category as any;
+      }
+      if (agentResult.priority) {
+        created.priority = agentResult.priority;
+      }
+      if (agentResult.assignedTo) {
+        created.assignedTo = agentResult.assignedTo as any;
+      }
+      await created.save();
+    } catch (agentErr) {
+      console.error("Agent workflow failed:", agentErr);
+    }
 
     await createAuditEntry({
       issueId: created._id,
@@ -169,6 +193,28 @@ export const updateIssue = async (req: Request, res: Response, next: NextFunctio
     }
 
     const updates = { ...req.body };
+    
+    // Agentic visual verification if being marked resolved
+    if (updates.status === "resolved" && oldIssue.status !== "resolved") {
+      if (updates.resolutionImage && oldIssue.image) {
+        const { visualVerify } = await import("../tools/visualVerify");
+        const path = await import("path");
+        const origPath = path.join(__dirname, "../../", oldIssue.image);
+        const resPath = path.join(__dirname, "../../", updates.resolutionImage);
+        
+        try {
+          const isVerified = await visualVerify(origPath, resPath);
+          if (!isVerified) {
+            res.status(400).json({ message: "Agent rejected the resolution. Visual proof does not match the original issue." });
+            return;
+          }
+          updates.visualVerified = true;
+        } catch (e) {
+          console.warn("Visual verification error:", e);
+        }
+      }
+    }
+
     const issue = await Issue.findByIdAndUpdate(req.params.id, updates, { new: true });
 
     if (req.body.status && req.body.status !== oldIssue.status) {
