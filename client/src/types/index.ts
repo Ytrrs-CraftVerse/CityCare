@@ -16,7 +16,7 @@ export interface Location {
 }
 
 export type IssueCategory = 'garbage' | 'pothole' | 'streetlight' | 'water' | 'other';
-export type IssueStatus = 'reported' | 'in-progress' | 'resolved';
+export type IssueStatus = 'reported' | 'in-progress' | 'resolved' | 'clarification';
 
 export interface Comment {
   _id?: string;
@@ -36,6 +36,10 @@ export interface Issue {
   status: IssueStatus;
   priority: number;
   image?: string;
+  resolutionImage?: string;
+  visualVerified?: boolean;
+  agentFeedback?: string;
+  isHotspot?: boolean;
   reportedBy: string;
   reportedByName: string;
   upvotes: number;
@@ -49,6 +53,7 @@ export interface Issue {
   severity: 'low' | 'medium' | 'high' | 'critical';
   verifiedBy: string[];
   verifiedCount: number;
+  assignedTo?: string;
   governmentAsset?: {
     assetId: string;
     roadName: string;

@@ -4,7 +4,7 @@ import type { Issue, IssueStats } from '../types';
 import {
   Shield, Activity, CheckCircle2, Clock, AlertCircle,
   Trash2, Eye, Loader2, DollarSign, AlertTriangle,
-  Flame, BadgeCheck, RefreshCw, Camera,
+  Flame, BadgeCheck, RefreshCw, Camera, HardHat,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -19,6 +19,8 @@ const AdminPage: React.FC = () => {
   const [recalcMsg, setRecalcMsg] = useState<string | null>(null);
   const [forensicResult, setForensicResult] = useState<any>(null);
   const [forensicLoading, setForensicLoading] = useState(false);
+  const [resolvingIssueId, setResolvingIssueId] = useState<string | null>(null);
+  const [resolutionFile, setResolutionFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadData();
@@ -37,6 +39,11 @@ const AdminPage: React.FC = () => {
   };
 
   const handleStatusChange = async (id: string, newStatus: string) => {
+    if (newStatus === 'resolved') {
+      setResolvingIssueId(id);
+      return;
+    }
+    
     setActionLoading(id);
     try {
       await updateIssue(id, { status: newStatus } as any);
@@ -46,6 +53,37 @@ const AdminPage: React.FC = () => {
       fetchStats();
     } catch (err) {
       console.error(err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleResolveSubmit = async () => {
+    if (!resolvingIssueId) return;
+    setActionLoading(resolvingIssueId);
+    
+    try {
+      let resolutionImageUrl = undefined;
+      if (resolutionFile) {
+        const { uploadImage } = await import('../services/api');
+        const uploadRes = await uploadImage(resolutionFile);
+        resolutionImageUrl = uploadRes.data.imageUrl;
+      }
+
+      await updateIssue(resolvingIssueId, { 
+        status: 'resolved', 
+        resolutionImage: resolutionImageUrl 
+      } as any);
+
+      setIssues((prev) =>
+        prev.map((i) => (i._id === resolvingIssueId ? { ...i, status: 'resolved', resolutionImage: resolutionImageUrl, visualVerified: !!resolutionImageUrl } as any : i))
+      );
+      fetchStats();
+      setResolvingIssueId(null);
+      setResolutionFile(null);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Failed to mark as resolved (Agent may have rejected the image).');
     } finally {
       setActionLoading(null);
     }
@@ -115,6 +153,31 @@ const AdminPage: React.FC = () => {
         </h1>
         <p className="page-subtitle">Manage issues, update status, and track budgets</p>
       </div>
+
+      {resolvingIssueId && (
+        <div className="card" style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--success)', background: 'rgba(34, 197, 94, 0.05)' }}>
+          <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <CheckCircle2 size={20} className="text-success" />
+            Resolve Issue
+          </h3>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+            To resolve this issue, please provide a photo of the completed repair. Our AI agent will verify the repair against the original image.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1rem' }}>
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => setResolutionFile(e.target.files?.[0] || null)} 
+              className="form-input"
+              style={{ flex: 1, padding: '0.4rem' }}
+            />
+            <button className="btn btn-primary" onClick={handleResolveSubmit} disabled={actionLoading === resolvingIssueId}>
+              {actionLoading === resolvingIssueId ? 'Verifying...' : 'Submit Resolution'}
+            </button>
+            <button className="btn btn-ghost" onClick={() => { setResolvingIssueId(null); setResolutionFile(null); }}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {/* Admin Actions */}
       <div className="card" style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', padding: '1rem 1.25rem' }}>
@@ -257,7 +320,7 @@ const AdminPage: React.FC = () => {
               <tr>
                 <th>Title</th>
                 <th>Category</th>
-                <th>Status</th>
+                <th>Status & Agent</th>
                 <th>Priority</th>
                 <th>Cost (₹)</th>
                 <th>Date</th>
@@ -280,19 +343,47 @@ const AdminPage: React.FC = () => {
                   </td>
                   <td>
                     <span className="badge badge-category">{issue.category}</span>
+                    {issue.isHotspot && (
+                      <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', marginLeft: '0.5rem' }}>
+                        🔥 Hotspot
+                      </span>
+                    )}
                   </td>
                   <td>
-                    <select
-                      className="form-select"
-                      style={{ width: 'auto', minWidth: '130px', padding: '0.35rem 0.5rem', fontSize: '0.8rem' }}
-                      value={issue.status}
-                      onChange={(e) => handleStatusChange(issue._id, e.target.value)}
-                      disabled={actionLoading === issue._id}
-                    >
-                      <option value="reported">Reported</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="resolved">Resolved</option>
-                    </select>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <select
+                        className="form-select"
+                        style={{ width: '100%', minWidth: '130px', padding: '0.35rem 0.5rem', fontSize: '0.8rem' }}
+                        value={issue.status}
+                        onChange={(e) => handleStatusChange(issue._id, e.target.value)}
+                        disabled={actionLoading === issue._id}
+                      >
+                        <option value="reported">Reported</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="clarification">Clarification</option>
+                        <option value="resolved">Resolved</option>
+                      </select>
+                      
+                      {issue.assignedTo && (
+                        <div style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--primary)' }}>
+                          <HardHat size={12} />
+                          {issue.assignedTo}
+                        </div>
+                      )}
+
+                      {issue.agentFeedback && (
+                        <div style={{ fontSize: '0.75rem', padding: '0.4rem', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', borderRadius: '0.3rem', borderLeft: '2px solid #8b5cf6' }}>
+                          <strong>Agent:</strong> {issue.agentFeedback}
+                        </div>
+                      )}
+
+                      {issue.visualVerified && (
+                        <div style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--success)' }}>
+                          <BadgeCheck size={12} />
+                          AI Verified
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td style={{ textAlign: 'center' }}>{'⭐'.repeat(issue.priority)}</td>
                   <td>

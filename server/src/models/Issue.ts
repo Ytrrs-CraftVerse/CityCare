@@ -17,9 +17,13 @@ export interface IIssue extends Document {
     coordinates: number[];
     address?: string;
   };
-  status: "reported" | "in-progress" | "resolved";
+  status: "reported" | "in-progress" | "resolved" | "clarification";
   priority: number;
   image?: string;
+  resolutionImage?: string;
+  visualVerified?: boolean;
+  agentFeedback?: string;
+  isHotspot?: boolean;
   reportedBy?: Types.ObjectId;
   reportedByName: string;
   upvotes: number;
@@ -33,7 +37,7 @@ export interface IIssue extends Document {
   severity: "low" | "medium" | "high" | "critical";
   verifiedBy: Types.ObjectId[];
   verifiedCount: number;
-  assignedTo?: Types.ObjectId;
+  assignedTo?: string;
   governmentAsset?: {
     assetId: string;
     roadName: string;
@@ -74,11 +78,15 @@ const issueSchema = new Schema<IIssue>(
     },
     status: {
       type: String,
-      enum: ["reported", "in-progress", "resolved"],
+      enum: ["reported", "in-progress", "resolved", "clarification"],
       default: "reported",
     },
-    priority: { type: Number, default: 1, min: 1, max: 5 },
+    priority: { type: Number, default: 1, min: 1, max: 150 },
     image: String,
+    resolutionImage: String,
+    visualVerified: { type: Boolean, default: false },
+    agentFeedback: String,
+    isHotspot: { type: Boolean, default: false },
     reportedBy: { type: Schema.Types.ObjectId, ref: "User" },
     reportedByName: { type: String, default: "Anonymous" },
     upvotes: { type: Number, default: 0 },
@@ -100,7 +108,7 @@ const issueSchema = new Schema<IIssue>(
     },
     verifiedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     verifiedCount: { type: Number, default: 0 },
-    assignedTo: { type: Schema.Types.ObjectId, ref: "User" },
+    assignedTo: { type: String },
     governmentAsset: {
       assetId: String,
       roadName: String,

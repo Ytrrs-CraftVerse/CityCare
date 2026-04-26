@@ -92,6 +92,23 @@ export const createIssue = async (req: Request, res: Response, next: NextFunctio
       if (agentResult.assignedTo) {
         created.assignedTo = agentResult.assignedTo as any;
       }
+      if (agentResult.status === "clarification") {
+        created.status = "clarification";
+      }
+      if (agentResult.history && agentResult.history.length > 0) {
+        // Find the clarification message if it exists
+        const clarMsg = agentResult.history.find((h: string) => h.includes("Clarification requested:"));
+        if (clarMsg) {
+          created.agentFeedback = clarMsg.split("Clarification requested: ")[1];
+        } else {
+          created.agentFeedback = agentResult.history.join(" | ");
+        }
+        
+        // Detect if hotspot bumped priority
+        if (agentResult.history.some((h: string) => h.includes("Hotspot detected"))) {
+          created.isHotspot = true;
+        }
+      }
       await created.save();
     } catch (agentErr) {
       console.error("Agent workflow failed:", agentErr);
