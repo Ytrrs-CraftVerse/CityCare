@@ -361,6 +361,7 @@ const AdminPage: React.FC = () => {
                         <option value="reported">Reported</option>
                         <option value="in-progress">In Progress</option>
                         <option value="clarification">Clarification</option>
+                        <option value="rejected">Rejected</option>
                         <option value="resolved">Resolved</option>
                       </select>
                       
@@ -368,6 +369,18 @@ const AdminPage: React.FC = () => {
                         <div style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--primary)' }}>
                           <HardHat size={12} />
                           {issue.assignedTo}
+                        </div>
+                      )}
+
+                      {issue.policyVerdict && (
+                        <div style={{ fontSize: '0.75rem', padding: '0.4rem', background: 'rgba(234, 179, 8, 0.1)', color: '#ca8a04', borderRadius: '0.3rem', borderLeft: '2px solid #eab308' }}>
+                          <strong>📜 RAG Policy:</strong> {issue.policyVerdict}
+                        </div>
+                      )}
+
+                      {issue.duplicateOf && (
+                        <div style={{ fontSize: '0.75rem', padding: '0.4rem', background: 'rgba(239, 68, 68, 0.08)', color: 'var(--error)', borderRadius: '0.3rem', borderLeft: '2px solid var(--error)' }}>
+                          <strong>🔗 Duplicate of:</strong> <a href={`/issues/${issue.duplicateOf}`} style={{ color: 'inherit', textDecoration: 'underline' }}>{issue.duplicateOf.slice(-6)}</a>
                         </div>
                       )}
 

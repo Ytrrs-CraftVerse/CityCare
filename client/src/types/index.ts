@@ -16,7 +16,7 @@ export interface Location {
 }
 
 export type IssueCategory = 'garbage' | 'pothole' | 'streetlight' | 'water' | 'other';
-export type IssueStatus = 'reported' | 'in-progress' | 'resolved' | 'clarification';
+export type IssueStatus = 'reported' | 'in-progress' | 'resolved' | 'clarification' | 'rejected';
 
 export interface Comment {
   _id?: string;
@@ -40,6 +40,8 @@ export interface Issue {
   visualVerified?: boolean;
   agentFeedback?: string;
   isHotspot?: boolean;
+  policyVerdict?: string;
+  duplicateOf?: string;
   reportedBy: string;
   reportedByName: string;
   upvotes: number;

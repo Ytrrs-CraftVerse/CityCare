@@ -75,6 +75,33 @@ export const createIssue = async (req: Request, res: Response, next: NextFunctio
     const created = await issue.save();
 
     try {
+      const { detectSemanticDuplicate } = await import("../tools/detectDuplicate");
+      const dupCheck = await detectSemanticDuplicate(
+        title,
+        description,
+        category,
+        location.lat,
+        location.lng
+      );
+
+      if (dupCheck.isDuplicate && dupCheck.matchedIssueId) {
+        created.status = "rejected";
+        created.duplicateOf = dupCheck.matchedIssueId;
+        created.agentFeedback = `RAG Duplicate Detection: ${dupCheck.similarity}% match with "${dupCheck.matchedTitle}". Auto-merged as upvote.`;
+        await created.save();
+
+        await Issue.findByIdAndUpdate(dupCheck.matchedIssueId, {
+          $inc: { upvotes: 1 },
+        });
+
+        res.status(201).json(created);
+        return;
+      }
+    } catch (dupErr) {
+      console.warn("Duplicate detection skipped:", dupErr);
+    }
+
+    try {
       const agentResult = await processComplaint({
         complaintId: created._id.toString(),
         MIS: req.user?._id.toString() || "Anonymous",
@@ -95,16 +122,22 @@ export const createIssue = async (req: Request, res: Response, next: NextFunctio
       if (agentResult.status === "clarification") {
         created.status = "clarification";
       }
+      if (agentResult.status === "rejected") {
+        created.status = "rejected";
+      }
       if (agentResult.history && agentResult.history.length > 0) {
-        // Find the clarification message if it exists
+        const policyMsg = agentResult.history.find((h: string) => h.includes("Policy Agent (RAG):"));
+        if (policyMsg) {
+          created.policyVerdict = policyMsg;
+        }
+
         const clarMsg = agentResult.history.find((h: string) => h.includes("Clarification requested:"));
         if (clarMsg) {
           created.agentFeedback = clarMsg.split("Clarification requested: ")[1];
         } else {
           created.agentFeedback = agentResult.history.join(" | ");
         }
-        
-        // Detect if hotspot bumped priority
+
         if (agentResult.history.some((h: string) => h.includes("Hotspot detected"))) {
           created.isHotspot = true;
         }

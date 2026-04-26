@@ -17,13 +17,15 @@ export interface IIssue extends Document {
     coordinates: number[];
     address?: string;
   };
-  status: "reported" | "in-progress" | "resolved" | "clarification";
+  status: "reported" | "in-progress" | "resolved" | "clarification" | "rejected";
   priority: number;
   image?: string;
   resolutionImage?: string;
   visualVerified?: boolean;
   agentFeedback?: string;
   isHotspot?: boolean;
+  policyVerdict?: string;
+  duplicateOf?: string;
   reportedBy?: Types.ObjectId;
   reportedByName: string;
   upvotes: number;
@@ -78,7 +80,7 @@ const issueSchema = new Schema<IIssue>(
     },
     status: {
       type: String,
-      enum: ["reported", "in-progress", "resolved", "clarification"],
+      enum: ["reported", "in-progress", "resolved", "clarification", "rejected"],
       default: "reported",
     },
     priority: { type: Number, default: 1, min: 1, max: 150 },
@@ -87,6 +89,8 @@ const issueSchema = new Schema<IIssue>(
     visualVerified: { type: Boolean, default: false },
     agentFeedback: String,
     isHotspot: { type: Boolean, default: false },
+    policyVerdict: String,
+    duplicateOf: String,
     reportedBy: { type: Schema.Types.ObjectId, ref: "User" },
     reportedByName: { type: String, default: "Anonymous" },
     upvotes: { type: Number, default: 0 },

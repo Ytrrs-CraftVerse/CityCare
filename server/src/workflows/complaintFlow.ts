@@ -8,7 +8,7 @@ export const ComplaintState = Annotation.Root({
   category: Annotation<string | null>(),
   priority: Annotation<number>(),
   missingData: Annotation<string[]>(),
-  status: Annotation<"triage" | "clarification" | "dispatch" | "verification" | "resolved" | "escalated">(),
+  status: Annotation<"triage" | "clarification" | "dispatch" | "verification" | "resolved" | "escalated" | "rejected">(),
   assignedTo: Annotation<string | null>(),
   history: Annotation<string[]>({
     reducer: (x, y) => x.concat(y),

@@ -3,6 +3,7 @@ import { ComplaintState } from "../workflows/complaintFlow";
 import { triageAgent } from "./triageAgent";
 import { dispatchAgent } from "./dispatchAgent";
 import { escalationAgent } from "./escalationAgent";
+import { policyAgent } from "./policyAgent";
 import fs from "fs";
 import path from "path";
 
@@ -24,6 +25,11 @@ const triageNode = async (state: typeof ComplaintState.State) => {
   return result;
 };
 
+const policyNode = async (state: typeof ComplaintState.State) => {
+  const result = await policyAgent(state);
+  return result;
+};
+
 const dispatchNode = async (state: typeof ComplaintState.State) => {
   const result = await dispatchAgent(state);
   return result;
@@ -36,6 +42,11 @@ const escalationNode = async (state: typeof ComplaintState.State) => {
 
 const routeFromTriage = (state: typeof ComplaintState.State) => {
   if (state.status === "clarification") return END;
+  return "policy";
+};
+
+const routeFromPolicy = (state: typeof ComplaintState.State) => {
+  if (state.status === "rejected") return END;
   return "dispatch";
 };
 
@@ -45,10 +56,12 @@ const routeFromDispatch = (state: typeof ComplaintState.State) => {
 
 const workflow = new StateGraph(ComplaintState)
   .addNode("triage", triageNode)
+  .addNode("policy", policyNode)
   .addNode("dispatch", dispatchNode)
   .addNode("escalation", escalationNode)
   .addEdge("__start__", "triage")
   .addConditionalEdges("triage", routeFromTriage)
+  .addConditionalEdges("policy", routeFromPolicy)
   .addConditionalEdges("dispatch", routeFromDispatch)
   .addEdge("escalation", END);
 
