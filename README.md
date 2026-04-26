@@ -29,7 +29,9 @@ CityCare empowers citizens to **report civic issues** — potholes, broken stree
 |---------|-------------|
 | 🗺️ **Vector Maps** | Interactive, high-performance vector maps using MapLibre GL JS |
 | 📸 **Agentic Photo Uploads** | Drag-and-drop photos with auto AI forensics (EXIF & Hash checks) |
-| 🤖 **AI Agent Workflows** | Auto-categorization, duplicate detection, and sentiment-based priority bumping |
+| 🤖 **LangGraph Agent Swarm** | 5 autonomous AI agents handling Triage, Policy checks, Dispatch, and Escalation |
+| 📚 **RAG Policy Enforcement** | Auto-checks complaints against embedded city bylaws to reject invalid requests |
+| 👯 **Semantic Duplicate Check** | Uses Nomic vector embeddings to auto-merge 82%+ similar reports within 500m |
 | 🏢 **Digital Twin** | City heatmap visualizing issue density clusters |
 | 🔌 **Open311 API** | Developer-friendly API explorer for civic interoperability |
 | 📱 **Proof of Fix** | Geofenced QR Code generation for contractors to verify repairs on-site |
@@ -96,13 +98,18 @@ graph TD
     Citizen -- "Uploads Photo & Sets GPS" --> ReportForm(Report Issue Form)
     ReportForm -- "Submits Data" --> Backend{API Gateway}
 
-    %% AI Pipeline
-    subgraph AI Processing Pipeline
-        Backend --> Sentiment[NLP Sentiment Analysis]
-        Backend --> DuplicateCheck[Geospatial Duplicate Detection]
-        Backend --> Categorization[AI Auto-Categorization]
+    %% Agent Swarm Pipeline (LangGraph)
+    subgraph Agent Swarm (LangGraph)
+        Backend --> TriageAgent[Triage Agent: Qwen Category/Priority]
+        TriageAgent --> PolicyAgent[Policy Agent: RAG Bylaw Check]
+        PolicyAgent --> DuplicateCheck[Duplicate Tool: Nomic Vector Search]
+        DuplicateCheck --> DispatchAgent[Dispatch Agent: MIS Assignment]
+        DispatchAgent --> EscalationAgent[Escalation Agent: SLA Monitor]
+        
+        TriageAgent -.-> Sentiment[NLP Sentiment Analysis]
+        PolicyAgent -.-> KnowledgeBase[bylaws.txt Embeddings]
         Backend --> Forensics[EXIF & Hash Photo Forensics]
-        Backend --> AssetDiscovery[OSM Asset Discovery]
+        DispatchAgent --> AssetDiscovery[OSM Asset Discovery]
         
         Sentiment -.-> Priority[Priority Auto-Bump]
         Forensics -.-> Verification[Photo Verification State]
@@ -111,7 +118,7 @@ graph TD
     %% Data Storage
     Priority --> DB[(MongoDB Geo-Database)]
     DuplicateCheck --> DB
-    Categorization --> DB
+    TriageAgent --> DB
     Verification --> DB
     AssetDiscovery --> DB
 
@@ -138,9 +145,11 @@ graph TD
 ```
 
 **Key Pipeline Stages:**
-1. **Intelligent Ingestion**: When a citizen submits a report, the text undergoes sentiment analysis (bumping priority for urgent complaints), and the image undergoes EXIF extraction and hash-checking to prevent duplicate spam.
-2. **Geospatial Discovery**: The GPS coordinates are cross-referenced with OpenStreetMap to automatically discover the specific road asset and responsible contractor.
-3. **Verification & Resolution**: Admins can generate a geofenced, cryptographically signed QR code. Contractors must physically scan this code at the exact coordinates of the issue to prove it was fixed.
+1. **LangGraph State Machine**: Every report enters a deterministic workflow orchestrated by `SupervisorAgent`.
+2. **Intelligent Triage & RAG**: `TriageAgent` categorizes issues, while `PolicyAgent` performs semantic searches against embedded municipal bylaws (`bylaws.txt`) to determine if the city is legally responsible.
+3. **Semantic Duplicates**: Active issues are vectorized. New issues within 500m with >82% semantic similarity are automatically merged.
+4. **Geospatial Discovery & Dispatch**: The GPS coordinates auto-discover the specific road asset. `DispatchAgent` assigns a verified MIS contractor ID.
+5. **Verification & Resolution**: Admins generate a geofenced QR code. Contractors must physically scan this code at the exact coordinates. `visualVerify` tool compares before/after photos using Llava.
 
 ---
 
