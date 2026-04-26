@@ -3,7 +3,7 @@ import { fetchProjects, voteOnProject, createProject } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { Project } from '../types';
 import {
-  Heart, ArrowUpCircle, MapPin, Users, Plus,
+  Heart, MapPin, Users, Plus,
   Loader2, Sparkles, X, ChevronUp,
 } from 'lucide-react';
 
@@ -195,7 +195,7 @@ const ProjectsPage: React.FC = () => {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           {projects.map((project, i) => {
-            const hasVoted = user && project.votes.some((v) => v.user === (user as any)._id);
+            const hasVoted = Boolean(user && project.votes.some((v) => v.user === (user as any)._id));
             
             return (
               <div key={project._id} className={`animate-slide-up delay-${Math.min(i + 1, 6)}`} style={{

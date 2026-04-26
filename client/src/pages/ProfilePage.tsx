@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { fetchMyIssues } from '../services/api';
 import type { Issue } from '../types';
 import {
-  User,
   Mail,
   Shield,
   Clock,

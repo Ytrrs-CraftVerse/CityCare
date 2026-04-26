@@ -269,7 +269,7 @@ const IssueDetailPage: React.FC = () => {
 
             {showAudit && auditTrail.length > 0 ? (
               <div className="audit-timeline">
-                {auditTrail.map((entry, i) => (
+                {auditTrail.map((entry) => (
                   <div key={entry._id} className="audit-entry">
                     <div className="audit-icon">{getAuditIcon(entry.action)}</div>
                     <div className="audit-content">
@@ -334,7 +334,7 @@ const IssueDetailPage: React.FC = () => {
                       <span className="comment-author">{c.userName || c.user}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {c.sentimentScore >= 5 && (
-                          <Flame size={12} style={{ color: 'var(--error)' }} title={`Sentiment: ${c.sentimentScore}`} />
+                          <Flame size={12} style={{ color: 'var(--error)' }} />
                         )}
                         <span className="comment-date">
                           {new Date(c.createdAt).toLocaleDateString()}

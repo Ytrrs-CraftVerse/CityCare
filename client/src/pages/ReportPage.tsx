@@ -5,7 +5,7 @@ import { reportIssue, fetchDuplicates, suggestCategory, uploadImage, verifyPhoto
 import type { Issue } from '../types';
 import {
   MapPin, Send, Loader2, CheckCircle2, AlertTriangle, Sparkles,
-  Camera, Upload, X, ShieldCheck, AlertCircle, Image as ImageIcon,
+  Camera, Upload, X, ShieldCheck, AlertCircle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -32,7 +32,6 @@ const ReportPage: React.FC = () => {
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
 
   // Photo state
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
@@ -105,7 +104,6 @@ const ReportPage: React.FC = () => {
   };
 
   const handlePhotoSelect = async (file: File) => {
-    setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
     setForensicResult(null);
 
@@ -140,7 +138,6 @@ const ReportPage: React.FC = () => {
   };
 
   const removePhoto = () => {
-    setPhotoFile(null);
     setPhotoPreview(null);
     setUploadedImageUrl(null);
     setForensicResult(null);

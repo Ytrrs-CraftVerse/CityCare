@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchOpen311Services, fetchOpen311Requests } from '../services/api';
 import type { Open311Service } from '../types';
-import { Code2, Globe, Loader2, Copy, CheckCircle2, Server, ChevronDown, ChevronRight } from 'lucide-react';
+import { Code2, Globe, Copy, CheckCircle2, Server, ChevronDown, ChevronRight } from 'lucide-react';
 
 const ApiExplorerPage: React.FC = () => {
   const [services, setServices] = useState<Open311Service[]>([]);

@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import MapLibre from '../components/MapLibre';
 import { fetchDigitalTwinData } from '../services/api';
 import type { DigitalTwinCell } from '../types';
-import { Link } from 'react-router-dom';
-import { Layers, Loader2, MapPin } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 const DigitalTwinPage: React.FC = () => {
   const [cells, setCells] = useState<DigitalTwinCell[]>([]);
@@ -16,16 +15,7 @@ const DigitalTwinPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const getHeatColor = (count: number) => {
-    if (count >= 5) return '#ef4444';
-    if (count >= 3) return '#f97316';
-    if (count >= 2) return '#eab308';
-    return '#22c55e';
-  };
 
-  const getRadius = (count: number) => {
-    return Math.min(8 + count * 4, 28);
-  };
 
   if (loading) {
     return (

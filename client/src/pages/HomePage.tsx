@@ -9,7 +9,6 @@ import {
   BarChart3,
   LayoutDashboard,
   AlertTriangle,
-  CheckCircle2,
   Clock,
   TrendingUp,
   ArrowRight,
