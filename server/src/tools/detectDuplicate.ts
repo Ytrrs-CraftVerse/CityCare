@@ -1,5 +1,4 @@
-// @ts-ignore
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { Document } from "@langchain/core/documents";
 import { embeddingsModel } from "../utils/ollamaClient";
 import Issue from "../models/Issue";

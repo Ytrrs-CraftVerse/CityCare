@@ -1,7 +1,5 @@
-// @ts-ignore
-import { ChatOllama } from "@langchain/community/chat_models/ollama";
-// @ts-ignore
-import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
+import { ChatOllama } from "@langchain/ollama";
+import { OllamaEmbeddings } from "@langchain/ollama";
 
 export const qwenModel = new ChatOllama({
   baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",

@@ -100,7 +100,7 @@ const HomePage: React.FC = () => {
       {/* Hero Section */}
       <section className="hero">
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.8rem', borderRadius: '9999px', background: 'var(--primary-glow)', border: '1px solid rgba(99,102,241,0.15)', fontSize: '0.78rem', color: 'var(--primary-light)', fontWeight: 600, marginBottom: '1.25rem' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.8rem', borderRadius: '0px', background: 'var(--primary-glow)', border: '2px solid var(--primary)', fontSize: '0.78rem', color: 'var(--primary-light)', fontWeight: 700, marginBottom: '1.25rem', boxShadow: '3px 3px 0px var(--primary)', textTransform: 'uppercase' }}>
             <Sparkles size={14} /> Community Board
           </div>
 
