@@ -91,7 +91,8 @@ CityCare operates on a highly automated, agent-driven architecture designed to m
 %%{init: {'theme': 'base', 'themeVariables': { 
 'background': '#0a0a0a',
 'primaryTextColor': '#ffffff',
-'edgeLabelBackground': '#0a0a0a'
+'edgeLabelBackground': '#0a0a0a',
+'lineColor': '#00ffff'
 }}}%%
 
 graph TD
@@ -115,13 +116,13 @@ end
 
 Backend --> Triage
 
-%% ================= SUPPORT (LOCAL ONLY) =================
+%% ================= SUPPORT =================
 Triage --> Sentiment[Sentiment Analysis]
 Policy --> Knowledge[Bylaw Embeddings]
 Dispatch --> Assets[Asset Discovery]
 Backend --> Forensics[Photo Forensics]
 
-%% ================= DB (SINGLE ENTRY FLOW) =================
+%% ================= DB =================
 DB[(MongoDB Geo DB)]
 
 Escalation --> DB
@@ -141,15 +142,17 @@ Contractor --> Resolution[Resolved]
 Resolution --> DB
 
 %% ================= STYLE =================
-classDef default fill:#0a0a0a,stroke:#0ff,stroke-width:2px,color:#fff;
+classDef default fill:#0a0a0a,stroke:#00ffff,stroke-width:2px,color:#fff;
 classDef user fill:#0a0a0a,stroke:#bf40ff,stroke-width:2px,color:#fff;
 classDef db fill:#0a0a0a,stroke:#00fa9a,stroke-width:2px,color:#fff;
 
 class Citizen,Contractor user;
 class DB db;
 
-%% REMOVE uneven box feel
-style AgentSwarm fill:transparent,stroke:#0ff,stroke-width:1px
+%% Subgraph styling
+style AgentSwarm fill:transparent,stroke:#00ffff,stroke-width:1px
+
+linkStyle default stroke:#00ffff,stroke-width:2px
 ```
 
 **Key Pipeline Stages:**
