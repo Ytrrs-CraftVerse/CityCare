@@ -96,32 +96,37 @@ CityCare operates on a highly automated, agent-driven architecture designed to m
 
 graph TD
 
-%% INPUT
 Citizen -->|Upload + GPS| ReportForm[Report Form]
 ReportForm --> Backend[API Gateway]
 
-%% CORE PIPELINE
-Backend --> Triage[Triage Agent]
-Triage --> Policy[Policy Agent]
-Policy --> Duplicate[Duplicate Check]
-Duplicate --> Dispatch[Dispatch Agent]
-Dispatch --> Escalation[Escalation Agent]
+subgraph AgentPipeline
+direction TB
+Triage[Triage Agent]
+Policy[Policy Agent]
+Duplicate[Duplicate Check]
+Dispatch[Dispatch Agent]
+Escalation[Escalation Agent]
 
-%% SUPPORT (placed near parents)
+Triage --> Policy --> Duplicate --> Dispatch --> Escalation
+end
+
+Backend --> Triage
+
+%% Remove that ugly grey box
+style AgentPipeline fill:transparent,stroke-width:0px
+
+%% Support
 Triage --> Sentiment[Sentiment Analysis]
 Policy --> Knowledge[Bylaw Knowledge Base]
+Backend --> Forensics[Photo Forensics]
 Dispatch --> Assets[Asset Discovery]
 
-%% SIDE PROCESS (no long loop)
-Backend --> Forensics[Photo Forensics]
-
-%% DATABASE (single direction only)
+%% DB
 DB[(MongoDB Geo DB)]
-
-Escalation --> DB
+Triage --> DB
+Duplicate --> DB
 Forensics --> DB
 Assets --> DB
-Duplicate --> DB
 ```
 
 **Key Pipeline Stages:**
