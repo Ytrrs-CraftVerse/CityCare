@@ -52,7 +52,7 @@ CityCare empowers citizens to **report civic issues** — potholes, broken stree
 ![Homepage](docs/assets/screenshot-home.png)
 
 ### Login
-> Glassmorphism auth card with admin credentials hint.
+> Neo-Brutalist auth card with sharp borders and admin credentials hint.
 ![Login](docs/assets/screenshot-login.png)
 
 ### Community Board (Dashboard)
@@ -337,12 +337,12 @@ Once both servers are running:
 
 ## 🎨 Design
 
-The UI follows a **premium dark theme** design language:
+The UI follows a **Neo-Brutalist dark theme** design language:
 
-- **Colors**: Indigo (`#6366f1`), Pink (`#ec4899`), Teal (`#14b8a6`) with gradient accents
+- **Colors**: Cyan, Neon Mint, and Purple pop-color accents on a high-contrast monochrome dark background
 - **Typography**: Inter (Google Fonts) with tight letter-spacing
-- **Effects**: Glassmorphism, gradient buttons, animated count-up stats
-- **Interactions**: Spring transitions, hover reveals, staggered entry animations
+- **Effects**: Sharp 0px corners, hard shadows, high-contrast borders
+- **Interactions**: Tangible, click-reactive UI components with button shadow offsets, staggered entry animations
 - **Maps**: CartoDB Dark Matter tiles for cohesive dark theme
 
 ---
