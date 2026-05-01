@@ -89,25 +89,21 @@ CityCare operates on a highly automated, agent-driven architecture designed to m
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 
-'background': '#ffffff',
-'primaryTextColor': '#000000',
-'edgeLabelBackground': '#ffffff'
+'background': '#0a0a0a',
+'primaryTextColor': '#ffffff',
+'edgeLabelBackground': '#0a0a0a'
 }}}%%
 
 graph TD
 
-%% USERS
-Citizen[Citizen]
-Contractor[Contractor]
-Admin[Administrator]
-
-%% INPUT
-Citizen -->|Upload + GPS| ReportForm[Report Form]
+%% ================= INPUT =================
+Citizen[Citizen / User] -->|Upload + GPS| ReportForm[Report Form]
 ReportForm --> Backend[API Gateway]
 
-%% AGENT PIPELINE
-subgraph AgentPipeline
-direction LR
+%% ================= CORE PIPELINE =================
+subgraph AgentSwarm
+direction TB
+
 Triage[Triage Agent]
 Policy[Policy Agent]
 Duplicate[Duplicate Check]
@@ -119,46 +115,41 @@ end
 
 Backend --> Triage
 
-%% SUPPORT
+%% ================= SUPPORT (LOCAL ONLY) =================
 Triage --> Sentiment[Sentiment Analysis]
-Policy --> Knowledge[Bylaw Knowledge Base]
-Backend --> Forensics[Photo Forensics]
+Policy --> Knowledge[Bylaw Embeddings]
 Dispatch --> Assets[Asset Discovery]
+Backend --> Forensics[Photo Forensics]
 
-%% DATABASE
+%% ================= DB (SINGLE ENTRY FLOW) =================
 DB[(MongoDB Geo DB)]
 
-Triage --> DB
-Duplicate --> DB
+Escalation --> DB
 Forensics --> DB
 Assets --> DB
+Duplicate --> DB
 
-%% OUTPUT
-DB --> Dashboard[Community Dashboard]
-DB --> Heatmap[Digital Twin Heatmap]
+%% ================= OUTPUT =================
+DB --> Dashboard[Community Board]
+DB --> Heatmap[Digital Twin]
 DB --> AdminPanel[Admin Panel]
 
-%% GOVERNANCE
-AdminPanel --> QR[QR Code Task]
-QR --> Contractor
-Contractor --> Resolution[Resolve Issue]
+%% ================= GOVERNANCE =================
+AdminPanel --> QR[QR Task]
+QR --> Contractor[Contractor]
+Contractor --> Resolution[Resolved]
 Resolution --> DB
 
-%% EXTERNAL
-DB --> Open311[Open311 Feed]
+%% ================= STYLE =================
+classDef default fill:#0a0a0a,stroke:#0ff,stroke-width:2px,color:#fff;
+classDef user fill:#0a0a0a,stroke:#bf40ff,stroke-width:2px,color:#fff;
+classDef db fill:#0a0a0a,stroke:#00fa9a,stroke-width:2px,color:#fff;
 
-%% STYLING
-classDef user stroke:#6c63ff,stroke-width:2px;
-classDef db stroke:#00a86b,stroke-width:2px;
-classDef core stroke:#007acc,stroke-width:2px;
-classDef support stroke:#999,stroke-dasharray: 5 5;
-
-class Citizen,Contractor,Admin user;
+class Citizen,Contractor user;
 class DB db;
-class Triage,Policy,Duplicate,Dispatch,Escalation core;
-class Sentiment,Knowledge,Forensics,Assets support;
 
-style AgentPipeline fill:#ffffff,stroke:#007acc,stroke-width:2px
+%% REMOVE uneven box feel
+style AgentSwarm fill:transparent,stroke:#0ff,stroke-width:1px
 ```
 
 **Key Pipeline Stages:**
