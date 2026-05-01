@@ -89,18 +89,25 @@ CityCare operates on a highly automated, agent-driven architecture designed to m
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 
-'background': '#0b1220',
-'primaryTextColor': '#ffffff',
-'edgeLabelBackground': '#0b1220'
+'background': '#ffffff',
+'primaryTextColor': '#000000',
+'edgeLabelBackground': '#ffffff'
 }}}%%
 
 graph TD
 
+%% USERS
+Citizen[Citizen]
+Contractor[Contractor]
+Admin[Administrator]
+
+%% INPUT
 Citizen -->|Upload + GPS| ReportForm[Report Form]
 ReportForm --> Backend[API Gateway]
 
+%% AGENT PIPELINE
 subgraph AgentPipeline
-direction TB
+direction LR
 Triage[Triage Agent]
 Policy[Policy Agent]
 Duplicate[Duplicate Check]
@@ -112,21 +119,46 @@ end
 
 Backend --> Triage
 
-%% Remove that ugly grey box
-style AgentPipeline fill:transparent,stroke-width:0px
-
-%% Support
+%% SUPPORT
 Triage --> Sentiment[Sentiment Analysis]
 Policy --> Knowledge[Bylaw Knowledge Base]
 Backend --> Forensics[Photo Forensics]
 Dispatch --> Assets[Asset Discovery]
 
-%% DB
+%% DATABASE
 DB[(MongoDB Geo DB)]
+
 Triage --> DB
 Duplicate --> DB
 Forensics --> DB
 Assets --> DB
+
+%% OUTPUT
+DB --> Dashboard[Community Dashboard]
+DB --> Heatmap[Digital Twin Heatmap]
+DB --> AdminPanel[Admin Panel]
+
+%% GOVERNANCE
+AdminPanel --> QR[QR Code Task]
+QR --> Contractor
+Contractor --> Resolution[Resolve Issue]
+Resolution --> DB
+
+%% EXTERNAL
+DB --> Open311[Open311 Feed]
+
+%% STYLING
+classDef user stroke:#6c63ff,stroke-width:2px;
+classDef db stroke:#00a86b,stroke-width:2px;
+classDef core stroke:#007acc,stroke-width:2px;
+classDef support stroke:#999,stroke-dasharray: 5 5;
+
+class Citizen,Contractor,Admin user;
+class DB db;
+class Triage,Policy,Duplicate,Dispatch,Escalation core;
+class Sentiment,Knowledge,Forensics,Assets support;
+
+style AgentPipeline fill:#ffffff,stroke:#007acc,stroke-width:2px
 ```
 
 **Key Pipeline Stages:**
