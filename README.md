@@ -136,9 +136,10 @@ graph TD
     %% Output Feeds
     DB -.-> Open311(Open311 API Feed)
     
-    classDef default fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#fff;
-    classDef database fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#fff;
-    classDef user fill:#6b21a8,stroke:#d946ef,stroke-width:2px,color:#fff;
+    classDef default fill:#0a0a0a,stroke:#0ff,stroke-width:3px,color:#fff,rx:0,ry:0;
+    classDef database fill:#0a0a0a,stroke:#00fa9a,stroke-width:3px,color:#fff,rx:0,ry:0;
+    classDef user fill:#0a0a0a,stroke:#bf40ff,stroke-width:3px,color:#fff,rx:0,ry:0;
+    style AgentSwarm fill:#111,stroke:#0ff,stroke-width:2px,stroke-dasharray: 5 5,color:#fff;
     
     class Citizen,Contractor,Admin user;
     class DB database;
