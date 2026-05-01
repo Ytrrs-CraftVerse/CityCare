@@ -88,14 +88,15 @@ CityCare empowers citizens to **report civic issues** — potholes, broken stree
 CityCare operates on a highly automated, agent-driven architecture designed to minimize manual administrative work.
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'background': '#0a0a0a', 'edgeLabelBackground': '#0a0a0a', 'primaryTextColor': '#ffffff', 'tertiaryTextColor': '#ffffff' }}}%%
 graph TD
     %% Roles
-    Citizen([Citizen / User])
-    Contractor([City Contractor])
-    Admin([City Administrator])
+    Citizen[Citizen / User]
+    Contractor[City Contractor]
+    Admin[City Administrator]
 
     %% Input Nodes
-    Citizen -- "Uploads Photo & Sets GPS" --> ReportForm(Report Issue Form)
+    Citizen -- "Uploads Photo & Sets GPS" --> ReportForm[Report Issue Form]
     ReportForm -- "Submits Data" --> Backend{API Gateway}
 
     %% Agent Swarm Pipeline (LangGraph)
@@ -128,9 +129,9 @@ graph TD
     DB --> AdminPanel[Admin Panel]
 
     %% Governance & Resolution
-    AdminPanel -- "Assigns Task & Generates QR" --> QRPayload(Geofenced QR Code)
+    AdminPanel -- "Assigns Task & Generates QR" --> QRPayload[Geofenced QR Code]
     QRPayload -- "Scanned On-Site" --> Contractor
-    Contractor -- "Verifies GPS via Scan" --> Resolution(Issue Resolved)
+    Contractor -- "Verifies GPS via Scan" --> Resolution[Issue Resolved]
     Resolution --> DB
     
     %% Output Feeds
