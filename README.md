@@ -88,62 +88,40 @@ CityCare empowers citizens to **report civic issues** — potholes, broken stree
 CityCare operates on a highly automated, agent-driven architecture designed to minimize manual administrative work.
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'background': '#0a0a0a', 'edgeLabelBackground': '#0a0a0a', 'primaryTextColor': '#ffffff', 'tertiaryTextColor': '#ffffff' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 
+'background': '#0b1220',
+'primaryTextColor': '#ffffff',
+'edgeLabelBackground': '#0b1220'
+}}}%%
+
 graph TD
-    %% Roles
-    Citizen[Citizen / User]
-    Contractor[City Contractor]
-    Admin[City Administrator]
 
-    %% Input Nodes
-    Citizen -- "Uploads Photo & Sets GPS" --> ReportForm[Report Issue Form]
-    ReportForm -- "Submits Data" --> Backend{API Gateway}
+%% INPUT
+Citizen -->|Upload + GPS| ReportForm[Report Form]
+ReportForm --> Backend[API Gateway]
 
-    %% Agent Swarm Pipeline (LangGraph)
-    subgraph AgentSwarm [Agent Swarm - LangGraph]
-        Backend --> TriageAgent[Triage Agent: Qwen Category/Priority]
-        TriageAgent --> PolicyAgent[Policy Agent: RAG Bylaw Check]
-        PolicyAgent --> DuplicateCheck[Duplicate Tool: Nomic Vector Search]
-        DuplicateCheck --> DispatchAgent[Dispatch Agent: MIS Assignment]
-        DispatchAgent --> EscalationAgent[Escalation Agent: SLA Monitor]
-        
-        TriageAgent -.-> Sentiment[NLP Sentiment Analysis]
-        PolicyAgent -.-> KnowledgeBase[bylaws.txt Embeddings]
-        Backend --> Forensics[EXIF & Hash Photo Forensics]
-        DispatchAgent --> AssetDiscovery[OSM Asset Discovery]
-        
-        Sentiment -.-> Priority[Priority Auto-Bump]
-        Forensics -.-> Verification[Photo Verification State]
-    end
+%% CORE PIPELINE
+Backend --> Triage[Triage Agent]
+Triage --> Policy[Policy Agent]
+Policy --> Duplicate[Duplicate Check]
+Duplicate --> Dispatch[Dispatch Agent]
+Dispatch --> Escalation[Escalation Agent]
 
-    %% Data Storage
-    Priority --> DB[(MongoDB Geo-Database)]
-    DuplicateCheck --> DB
-    TriageAgent --> DB
-    Verification --> DB
-    AssetDiscovery --> DB
+%% SUPPORT (placed near parents)
+Triage --> Sentiment[Sentiment Analysis]
+Policy --> Knowledge[Bylaw Knowledge Base]
+Dispatch --> Assets[Asset Discovery]
 
-    %% Output & Management
-    DB --> Dashboard[Community Board]
-    DB --> DigitalTwin[Digital Twin Heatmap]
-    DB --> AdminPanel[Admin Panel]
+%% SIDE PROCESS (no long loop)
+Backend --> Forensics[Photo Forensics]
 
-    %% Governance & Resolution
-    AdminPanel -- "Assigns Task & Generates QR" --> QRPayload[Geofenced QR Code]
-    QRPayload -- "Scanned On-Site" --> Contractor
-    Contractor -- "Verifies GPS via Scan" --> Resolution[Issue Resolved]
-    Resolution --> DB
-    
-    %% Output Feeds
-    DB -.-> Open311(Open311 API Feed)
-    
-    classDef default fill:#0a0a0a,stroke:#0ff,stroke-width:3px,color:#fff,rx:0,ry:0;
-    classDef database fill:#0a0a0a,stroke:#00fa9a,stroke-width:3px,color:#fff,rx:0,ry:0;
-    classDef user fill:#0a0a0a,stroke:#bf40ff,stroke-width:3px,color:#fff,rx:0,ry:0;
-    style AgentSwarm fill:#111,stroke:#0ff,stroke-width:2px,stroke-dasharray: 5 5,color:#fff;
-    
-    class Citizen,Contractor,Admin user;
-    class DB database;
+%% DATABASE (single direction only)
+DB[(MongoDB Geo DB)]
+
+Escalation --> DB
+Forensics --> DB
+Assets --> DB
+Duplicate --> DB
 ```
 
 **Key Pipeline Stages:**
