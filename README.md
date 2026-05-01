@@ -99,7 +99,7 @@ graph TD
     ReportForm -- "Submits Data" --> Backend{API Gateway}
 
     %% Agent Swarm Pipeline (LangGraph)
-    subgraph Agent Swarm (LangGraph)
+    subgraph AgentSwarm [Agent Swarm - LangGraph]
         Backend --> TriageAgent[Triage Agent: Qwen Category/Priority]
         TriageAgent --> PolicyAgent[Policy Agent: RAG Bylaw Check]
         PolicyAgent --> DuplicateCheck[Duplicate Tool: Nomic Vector Search]
